@@ -1,0 +1,23 @@
+<!-- Héritage du template base -->
+{% extends "base.html" %}
+
+<!-- Début du bloc content -->
+{% block content %}
+  <!-- Conteneur principal -->
+  <div class="container">
+    <!-- Titre -->
+    <h2>Ajouter une boisson</h2>
+
+    <!-- Formulaire POST -->
+    <form method="post">
+      <!-- Token CSRF obligatoire -->
+      {% csrf_token %}
+      <!-- Affichage du formulaire complet -->
+      {{ form.as_p }}
+      <!-- Bouton enregistrer -->
+      <button type="submit" class="btn btn-success">Enregistrer</button>
+      <!-- Bouton annuler -->
+      <a href="{% url 'boissons:liste_boissons' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+  </div>
+{% endblock %}

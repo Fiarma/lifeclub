@@ -1,0 +1,24 @@
+<!-- Héritage du template base -->
+{% extends "base.html" %}
+
+<!-- Début du bloc content -->
+{% block content %}
+  <!-- Conteneur principal -->
+  <div class="container">
+    <!-- Titre de confirmation -->
+    <h2>Supprimer la boisson</h2>
+
+    <!-- Message de confirmation avec le nom -->
+    <p>Voulez-vous vraiment supprimer <strong>{{ boisson.nom }}</strong> ?</p>
+
+    <!-- Formulaire POST pour confirmer la suppression -->
+    <form method="post">
+      <!-- Token CSRF -->
+      {% csrf_token %}
+      <!-- Bouton de confirmation -->
+      <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+      <!-- Lien annuler -->
+      <a href="{% url 'boissons:liste_boissons' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+  </div>
+{% endblock %}

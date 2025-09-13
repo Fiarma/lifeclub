@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Mise à jour du stock : {{ boisson.nom }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+
+    <!-- Affichage du stock initial connu (valeur héritée depuis boisson.stock_actuel) -->
+    <p><strong>Stock initial :</strong> {{ boisson.stock_actuel }}</p>
+    
+        <!-- Champ stock actuel -->
+        <div class="mb-3">
+            <label for="id_stock_actuel" class="form-label">Stock actuel</label>
+            {{ form.stock_actuel }}
+        </div>
+
+        <!-- Champ justification, masqué par défaut -->
+        <div class="mb-3" id="justification-container" style="display:none;">
+            <label for="id_justification" class="form-label">Justification</label>
+            {{ form.justification }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="{% url 'boissons:liste_boissons' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+
+<!-- JS pour afficher le champ justification seulement si stock_actuel != stock_initial -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const stockActuelInput = document.getElementById("id_stock_actuel");
+    const justificationContainer = document.getElementById("justification-container");
+    const stockInitial = {{ historique.stock_initial|default:boisson.stock_actuel }}; // valeur initiale
+
+    function toggleJustification() {
+        if (parseInt(stockActuelInput.value) !== stockInitial) {
+            justificationContainer.style.display = "block";
+        } else {
+            justificationContainer.style.display = "none";
+        }
+    }
+
+    stockActuelInput.addEventListener("input", toggleJustification);
+    toggleJustification(); // vérifier au chargement
+});
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+super pour, la boisson, on doit avoir un stock initial et un stock actuel. je m'explique, lifeclub est une boite de nuit donc on travaille la nuit jusqu'au petit matin. Le stock initial represente le  nombre de boissons restante apres la vente dans la nuit jusqu'au petit matin.
+chaque soir ,avant de commencer la vente, on compte encore le nombre  de boissons, c'est le stock actuel  (on verifie le stock de chaque boisson). 
+Si le stock actuel == au stock initial il ya pas de probleme. Par contre si le stock actuel est different du stock initial, il faut justifier onc il faut un nouveau champ pour ca:
+- Dans le cas ou le stock actuel est inferieur au stock initial, alors il ya donc un manque de boissons et il faut donc justifier ce manque,
+- Dans le cas ou le stock actuel est superieur au stock initial,  il est possible qu'on ait  ravitailler le stock de la boisson  en question, et il faut egalement le justifier .
+Dans les 2 cas, la justification est obigatoire

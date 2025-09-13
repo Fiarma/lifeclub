@@ -1,0 +1,57 @@
+{% extends "base.html" %} {# Hérite du template de base, incluant navbar et footer #}
+
+{% block content %} {# Début du bloc content pour injecter le contenu spécifique de cette page #}
+<div class="container"> {# Conteneur principal pour centrer le contenu et appliquer du padding #}
+
+    <!-- Titre de la page -->
+    <h2>Liste des boissons</h2>
+
+    <!-- Bouton pour ajouter une nouvelle boisson -->
+    <a href="{% url 'boissons:add_boisson' %}" class="btn btn-success mb-3">
+        Ajouter une boisson
+    </a>
+
+    <!-- Tableau affichant les boissons -->
+    <table class="table table-striped">
+        <thead> {# En-tête du tableau #}
+            <tr>
+                <th>Nom</th> {# Nom de la boisson #}
+                <th>Prix unitaire</th> {# Prix unitaire de la boisson #}
+                <th>Stock actuel</th> {# Stock actuel de la boisson #}
+                <th>Actions</th> {# Colonne pour les boutons d'action #}
+            </tr>
+        </thead>
+        <tbody> {# Corps du tableau #}
+            {% for b in boissons %} {# Boucle sur toutes les boissons transmises par la vue #}
+            <tr>
+                <td>{{ b.nom }}</td> {# Affiche le nom de la boisson #}
+                <td>{{ b.prix_unitaire }} FCFA</td> {# Affiche le prix unitaire en FCFA #}
+                <td>{{ b.stock_actuel }}</td> {# Affiche le stock actuel #}
+                <td>
+                    <!-- Lien pour mise à jour du stock -->
+                    <a href="{% url 'boissons:maj_stock' b.id %}" class="btn btn-sm btn-primary">
+                        MàJ Stock
+                    </a>
+                    <!-- Lien pour éditer la boisson -->
+                    <a href="{% url 'boissons:edit_boisson' b.id %}" class="btn btn-sm btn-warning">
+                        Éditer
+                    </a>
+                    <!-- Lien pour supprimer la boisson -->
+                    <a href="{% url 'boissons:delete_boisson' b.id %}" class="btn btn-sm btn-danger">
+                        Supprimer
+                    </a>
+                    <!-- Lien pour consulter l'historique des stocks -->
+                    <a href="{% url 'boissons:historique_stock' b.id %}" class="btn btn-sm btn-info">
+                        Historique
+                    </a>
+                </td>
+            </tr>
+            {% empty %} {# Si aucune boisson n'est présente #}
+            <tr>
+                <td colspan="5">Aucune boisson enregistrée.</td> {# Message affiché quand la liste est vide #}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} {# Fin du bloc content #}
