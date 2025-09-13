@@ -1,0 +1,23 @@
+{# Hérite du template de base #}
+{% extends "base.html" %}
+
+{# Bloc principal de contenu #}
+{% block content %}
+{# Conteneur principal #}
+<div class="container mt-4">
+  {# Titre #}
+  <h2>Ajouter une avance</h2>
+
+  {# Formulaire POST pour créer une avance #}
+  <form method="post">
+    {# Token CSRF obligatoire #}
+    {% csrf_token %}
+    {# Rendu automatique des champs du formulaire (personnel, montant, date_avance, motif) #}
+    {{ form.as_p }}
+    {# Bouton d'enregistrement #}
+    <button type="submit" class="btn btn-primary">Enregistrer</button>
+    {# Lien retour vers la liste des avances #}
+    <a href="{% url 'avances:avance_list' %}" class="btn btn-secondary">Annuler</a>
+  </form>
+</div>
+{% endblock %}

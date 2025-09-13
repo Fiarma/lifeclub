@@ -1,0 +1,23 @@
+{# Hérite du template de base #}
+{% extends "base.html" %}
+
+{# Bloc principal de contenu #}
+{% block content %}
+{# Conteneur principal #}
+<div class="container mt-4">
+  {# Titre #}
+  <h2>Modifier l'avance</h2>
+
+  {# Formulaire POST prérempli pour modifier l'avance #}
+  <form method="post">
+    {# Token CSRF #}
+    {% csrf_token %}
+    {# Rendu automatique des champs du formulaire (préremplis) #}
+    {{ form.as_p }}
+    {# Bouton de mise à jour #}
+    <button type="submit" class="btn btn-primary">Mettre à jour</button>
+    {# Lien retour vers la liste des avances #}
+    <a href="{% url 'avances:avance_list' %}" class="btn btn-secondary">Annuler</a>
+  </form>
+</div>
+{% endblock %}

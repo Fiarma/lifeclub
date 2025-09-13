@@ -1,0 +1,55 @@
+{# Héritage du template de base pour garder navbar/footer #}
+{% extends "base.html" %}
+
+{# Bloc principal de contenu #}
+{% block content %}
+{# Conteneur principal #}
+<div class="container mt-4">
+  {# Titre de la page #}
+  <h2>Liste des avances</h2>
+
+  {# Bouton pour ajouter une nouvelle avance #}
+  <a href="{% url 'avances:add_avance' %}" class="btn btn-success mb-3">Ajouter une avance</a>
+
+  {# Tableau affichant les avances #}
+  <table class="table table-striped">
+    {# En-tête du tableau #}
+    <thead>
+      <tr>
+        <th>Personnel</th>
+        <th>Montant</th>
+        <th>Date</th>
+        <th>Motif</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    {# Corps du tableau #}
+    <tbody>
+      {# Boucle sur les avances fournies par la vue #}
+      {% for avance in avances %}
+      <tr>
+        {# Nom et prénom du personnel lié #}
+        <td>{{ avance.personnel.nom }} {{ avance.personnel.prenom }}</td>
+        {# Montant formaté #}
+        <td>{{ avance.montant }} FCFA</td>
+        {# Date de l'avance #}
+        <td>{{ avance.date_avance|date:"d/m/Y" }}</td>
+        {# Motif (ou tiret si vide) #}
+        <td>{{ avance.motif|default:"-" }}</td>
+        {# Actions : éditer / supprimer #}
+        <td>
+          <a href="{% url 'avances:edit_avance' avance.pk %}" class="btn btn-sm btn-warning">Éditer</a>
+          <a href="{% url 'avances:delete_avance' avance.pk %}" class="btn btn-sm btn-danger">Supprimer</a>
+        </td>
+      </tr>
+      {% empty %}
+      {# Message si aucune avance #}
+      <tr>
+        <td colspan="5">Aucune avance enregistrée.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

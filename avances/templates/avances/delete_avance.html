@@ -1,0 +1,24 @@
+{# Hérite du template de base #}
+{% extends "base.html" %}
+
+{# Bloc principal de contenu #}
+{% block content %}
+{# Conteneur principal #}
+<div class="container mt-4">
+  {# Titre #}
+  <h2>Supprimer l'avance</h2>
+
+  {# Message de confirmation avec le nom du personnel et la date #}
+  <p>Voulez-vous vraiment supprimer l'avance de <strong>{{ avance.personnel.nom }} {{ avance.personnel.prenom }}</strong> du {{ avance.date_avance|date:"d/m/Y" }} ?</p>
+
+  {# Formulaire POST de confirmation #}
+  <form method="post">
+    {# Token CSRF #}
+    {% csrf_token %}
+    {# Bouton supprimer #}
+    <button type="submit" class="btn btn-danger">Supprimer</button>
+    {# Lien annuler qui revient à la liste des avances #}
+    <a href="{% url 'avances:avance_list' %}" class="btn btn-secondary">Annuler</a>
+  </form>
+</div>
+{% endblock %}

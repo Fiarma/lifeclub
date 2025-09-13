@@ -1,3 +1,64 @@
-from django.shortcuts import render
+# Import des utilitaires de rendu et redirection
+from django.shortcuts import render, redirect, get_object_or_404
+# Import du modèle Avance pour les opérations sur la BD
+from .models import Avance
+# Import du formulaire AvanceForm pour créer / éditer des avances
+from .forms import AvanceForm
 
-# Create your views here.
+# Vue listant toutes les avances (triées par date décroissante)
+def avance_list(request):
+    # Récupération des avances avec jointure sur personnel pour optimiser les requêtes
+    avances = Avance.objects.select_related("personnel").all().order_by("-date_avance")
+    # Rendu du template 'avance_list.html' avec le contexte
+    return render(request, "avances/avance_list.html", {"avances": avances})
+
+# Vue pour ajouter une nouvelle avance
+def add_avance(request):
+    # Si la méthode est POST on traite le formulaire envoyé
+    if request.method == "POST":
+        # Instanciation du formulaire avec les données POST
+        form = AvanceForm(request.POST)
+        # Validation du formulaire
+        if form.is_valid():
+            # Sauvegarde de l'objet Avance en base
+            form.save()
+            # Redirection vers la liste des avances après enregistrement
+            return redirect("avances:avance_list")
+    else:
+        # Si méthode GET on affiche un formulaire vide
+        form = AvanceForm()
+    # Rendu du template d'ajout avec le formulaire
+    return render(request, "avances/add_avance.html", {"form": form})
+
+# Vue pour éditer une avance existante
+def edit_avance(request, pk):
+    # Récupération de l'avance ou 404 si inexistante
+    avance = get_object_or_404(Avance, pk=pk)
+    # Si POST : traitement du formulaire de mise à jour
+    if request.method == "POST":
+        # Instanciation du formulaire lié à l'instance existante
+        form = AvanceForm(request.POST, instance=avance)
+        # Validation
+        if form.is_valid():
+            # Sauvegarde des modifications
+            form.save()
+            # Redirection vers la liste
+            return redirect("avances:avance_list")
+    else:
+        # Si GET : préremplissage du formulaire avec l'instance
+        form = AvanceForm(instance=avance)
+    # Rendu du template d'édition
+    return render(request, "avances/edit_avance.html", {"form": form})
+
+# Vue pour supprimer une avance (confirmation puis suppression)
+def delete_avance(request, pk):
+    # Récupération de l'objet Avance ou 404
+    avance = get_object_or_404(Avance, pk=pk)
+    # Si POST : suppression confirmée
+    if request.method == "POST":
+        # Suppression de l'avance
+        avance.delete()
+        # Redirection vers la liste
+        return redirect("avances:avance_list")
+    # Si GET : afficher le template de confirmation
+    return render(request, "avances/delete_avance.html", {"avance": avance})
