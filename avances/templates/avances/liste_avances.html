@@ -60,7 +60,7 @@
           <!-- Montant de l'avance -->
           <td>{{ avance.montant }}</td>
           <!-- Personne ayant pris l'avance -->
-          <td>{{ avance.personnel.nom_complet }}</td>
+          <td>{{ avance.personnel }}</td>
           <!-- Actions : éditer et supprimer -->
           <td>
             <a href="{% url 'avances:edit_avance' avance.pk %}" class="btn btn-sm btn-warning">Éditer</a>

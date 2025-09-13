@@ -13,14 +13,19 @@
     <!-- Liens de navigation -->
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'personnel:liste_personnel' %}">Personnel</a>
+        </li>
+
         <li class="nav-item">
           <a class="nav-link" href="{% url 'boissons:liste_boissons' %}">Boissons</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Commandes</a>
+          <a class="nav-link" href="{% url 'avances:liste_avances' %}">Avances</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Statistiques</a>
+          <a class="nav-link" href="{% url 'depenses:liste_depenses' %}">Depenses</a>
         </li>
       </ul>
     </div>
