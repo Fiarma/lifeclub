@@ -1,0 +1,44 @@
+<!-- Héritage du template de base -->
+{% extends "base.html" %}
+
+<!-- Début du bloc content -->
+{% block content %}
+<div class="container">
+    <!-- Titre de la page -->
+    <h2>Modifier la dépense</h2>
+
+    <!-- Début du formulaire -->
+    <form method="post">
+        {% csrf_token %} <!-- Protection CSRF -->
+
+        <!-- Affichage des erreurs globales du formulaire -->
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <!-- Boucle sur tous les champs du formulaire -->
+        {% for field in form %}
+        <div class="mb-3">
+            <!-- Affichage du label -->
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            
+            <!-- Champ de saisie -->
+            {{ field }}
+            
+            <!-- Affichage des erreurs spécifiques -->
+            {% if field.errors %}
+            <div class="text-danger">
+                {{ field.errors }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Boutons -->
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="{% url 'depenses:liste_depenses' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

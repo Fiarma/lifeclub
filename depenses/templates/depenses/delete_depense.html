@@ -1,0 +1,28 @@
+<!-- Héritage du template de base -->
+{% extends "base.html" %}
+
+<!-- Début du bloc content -->
+{% block content %}
+<div class="container">
+    <!-- Titre de la page -->
+    <h2>Supprimer la dépense</h2>
+
+    <!-- Message de confirmation -->
+    <p>Êtes-vous sûr de vouloir supprimer cette dépense ?</p>
+
+    <!-- Détails de la dépense -->
+    <ul>
+        <li><strong>Personne :</strong> {{ depense.personnel.nom }}</li>
+        <li><strong>Montant :</strong> {{ depense.montant }} FCFA</li>
+        <li><strong>Motif :</strong> {{ depense.motif }}</li>
+        <li><strong>Date :</strong> {{ depense.date }}</li>
+    </ul>
+
+    <!-- Formulaire pour confirmer la suppression -->
+    <form method="post">
+        {% csrf_token %} <!-- Protection CSRF -->
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'depenses:liste_depenses' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

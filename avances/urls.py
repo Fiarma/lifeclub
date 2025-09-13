@@ -9,7 +9,7 @@ app_name = "avances"
 # Définition des routes de l'app avances
 urlpatterns = [
     # Route racine : liste des avances
-    path("", views.avance_list, name="avance_list"),
+    path("", views.liste_avances, name="liste_avances"),
     # Route pour ajouter une avance
     path("add/", views.add_avance, name="add_avance"),
     # Route pour éditer une avance existante

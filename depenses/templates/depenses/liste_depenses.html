@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <!-- Titre de la page -->
+  <h2>Liste des dépenses</h2>
+
+  <!-- ================= FORMULAIRE DE RECHERCHE ================= -->
+  <form method="get" class="mb-3 row g-3">
+    <!-- Sélecteur pour choisir le type de recherche -->
+    <div class="col-auto">
+      {{ form.search_type.label_tag }} {{ form.search_type }}
+    </div>
+
+    <!-- Champ pour la recherche par date -->
+    <div class="col-auto" id="date-field">
+      {{ form.date.label_tag }} {{ form.date }}
+    </div>
+
+    <!-- Champ pour la recherche par mois -->
+    <div class="col-auto" id="month-field">
+      {{ form.month.label_tag }} {{ form.month }}
+    </div>
+
+    <!-- Champ pour filtrer par personnel -->
+    <div class="col-auto">
+      {{ form.personnel.label_tag }} {{ form.personnel }}
+    </div>
+
+    <!-- Boutons de validation et réinitialisation -->
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Rechercher</button>
+      <a href="{% url 'depenses:liste_depenses' %}" class="btn btn-secondary">Réinitialiser</a>
+    </div>
+  </form>
+  <!-- ================= FIN FORMULAIRE ================= -->
+
+  <!-- ================= TABLEAU DES DÉPENSES ================= -->
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Montant</th>
+        <th>Motif</th>
+        <th>Pris par</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dep in depenses %}
+        <tr>
+          <td>{{ dep.date|date:"d/m/Y" }}</td> <!-- date automatique -->
+          <td>{{ dep.montant }}</td>
+          <td>{{ dep.motif }}</td>
+          <td>{{ dep.personnel }}</td>
+          <td>
+              <a href="{% url 'depenses:edit_depense' dep.id %}" class="btn btn-sm btn-warning">Éditer</a>
+              <a href="{% url 'depenses:delete_depense' dep.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+            </td>
+
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">Aucune dépense trouvée.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <!-- ================= FIN TABLEAU ================= -->
+</div>
+
+<!-- ================= SCRIPT JAVASCRIPT ================= -->
+<script>
+  // Fonction pour afficher/masquer les champs selon le choix du select
+  function toggleFields() {
+    let type = document.querySelector("#id_search_type").value;
+    document.getElementById("date-field").style.display = (type === "date") ? "block" : "none";
+    document.getElementById("month-field").style.display = (type === "month") ? "block" : "none";
+  }
+
+  // Appel au chargement de la page
+  document.addEventListener("DOMContentLoaded", toggleFields);
+  // Réagir quand l’utilisateur change le select
+  document.querySelector("#id_search_type").addEventListener("change", toggleFields);
+</script>
+<!-- ================= FIN SCRIPT ================= -->
+
+{% endblock %}

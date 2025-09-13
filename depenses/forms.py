@@ -1,17 +1,31 @@
+# Import des modules Django pour créer des formulaires
 from django import forms
-from .models import Avance
+from .models import Depense
 
-class AvanceForm(forms.ModelForm):
+# Formulaire pour ajouter ou éditer une dépense
+class DepenseForm(forms.ModelForm):
     class Meta:
-        model = Avance
-        fields = ["personnel", "montant", "motif"]
+        model = Depense
+        fields = ("personnel", "montant", "motif")  # Champs exposés
+
+    # # Personnalisation des widgets
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     # Montant : champ nombre positif
+    #     self.fields["montant"].widget.attrs.update({"min": 0})
+    #     # Motif : textarea de 2 lignes
+    #     self.fields["motif"].widget.attrs.update({"rows": 2})
+    #     # Date : input date HTML5
+    #     self.fields["date"].widget.attrs.update({"type": "date"})
 
 
-# forms.py dans app avances
+# forms.py dans app depenses
 from django import forms
-from personnel.models import Personnel
+# forms.py dans app depenses
+from django import forms
+from personnel.models import Personnel  # importer le modèle Personnel
 
-class AvanceFilterForm(forms.Form):
+class DepenseFilterForm(forms.Form):
     # Champ select pour choisir le type de recherche
     search_type = forms.ChoiceField(
         choices=[
@@ -34,13 +48,13 @@ class AvanceFilterForm(forms.Form):
     month = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={'type': 'month'}),
-        input_formats=['%Y-%m'],
+        input_formats=['%Y-%m'],  # accepte "YYYY-MM"
         label="Mois"
     )
 
     # Champ pour filtrer par personnel
     personnel = forms.ModelChoiceField(
-        queryset=Personnel.objects.all(),
+        queryset=Personnel.objects.all(),  # liste de tous les personnels
         required=False,
         label="Personnel"
     )
