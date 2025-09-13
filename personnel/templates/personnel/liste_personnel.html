@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Liste du personnel</h2>
+    <a href="{% url 'personnel:add_personnel' %}" class="btn btn-success mb-3">Ajouter un employé</a>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Rôle</th>
+                <th>Lieu</th>
+                <th>Jours de repos</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in personnels %}
+            <tr>
+                <td>{{ p.id }}</td>
+                <td>{{ p.nom }}</td>
+                <td>{{ p.prenom }}</td>
+                <td>{{ p.get_role_display }}</td>
+                <td>{{ p.get_lieu_travail_display }}</td>
+                <td>{{ p.jours_repos|join:", " }}</td>
+                <td>
+                    <a href="{% url 'personnel:edit_personnel' p.id %}" class="btn btn-warning btn-sm">Éditer</a>
+                    <a href="{% url 'personnel:delete_personnel' p.id %}" class="btn btn-danger btn-sm">Supprimer</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">Aucun employé enregistré.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -27,6 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+
+
+#Cette partie est dediee a jl'ajout des  liens ngrok pour la recurite des formulaire
+CSRF_TRUSTED_ORIGINS = [
+    'https://a40b641da22b.ngrok-free.app'
+]
 # Redirection quand @login_required bloque l'accès
 #LOGIN_URL = '/'  # par défaut redirige vers la page principale
 

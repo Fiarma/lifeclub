@@ -1,0 +1,22 @@
+<!-- Héritage du template de base -->
+{% extends "base.html" %}
+
+<!-- Bloc principal pour le contenu -->
+{% block content %}
+<div class="container">
+    <!-- Titre de confirmation -->
+    <h2>Supprimer un employé</h2>
+
+    <!-- Message de confirmation -->
+    <p>Êtes-vous sûr de vouloir supprimer {{ personnel.nom }} {{ personnel.prenom }} ?</p>
+
+    <!-- Formulaire POST pour confirmer la suppression -->
+    <form method="post">
+        {% csrf_token %} <!-- Token CSRF pour la sécurité -->
+        <!-- Bouton pour confirmer -->
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <!-- Bouton retour sans supprimer -->
+        <a href="{% url 'personnel:liste_personnel' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

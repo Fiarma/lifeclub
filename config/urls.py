@@ -12,6 +12,8 @@ urlpatterns = [
 
     # Inclure les routes de l'app 'boissons'
     path('', include('boissons.urls', namespace='boissons')),
+    path('personnel/', include('personnel.urls', namespace='personnel')),
+
 ]
 
 # En environnement de développement (DEBUG=True), servir MEDIA et STATIC via Django

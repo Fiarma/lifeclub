@@ -1,0 +1,23 @@
+<!-- Héritage du template de base -->
+{% extends "base.html" %}
+
+<!-- Bloc principal pour le contenu -->
+{% block content %}
+<div class="container">
+    <!-- Titre de la page -->
+    <h2>Ajouter un employé</h2>
+
+    <!-- Formulaire pour ajouter un personnel -->
+    <form method="post">
+        {% csrf_token %} <!-- Token CSRF pour la sécurité -->
+        
+        <!-- Affiche tous les champs du formulaire avec erreurs incluses -->
+        {{ form.as_p }}
+
+        <!-- Bouton de soumission -->
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <!-- Bouton retour vers la liste du personnel -->
+        <a href="{% url 'personnel:liste_personnel' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}
