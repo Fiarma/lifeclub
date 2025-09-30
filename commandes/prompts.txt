@@ -1,0 +1,65 @@
+
+Dans la liste des  commandes, pour chaque commande, 
+-  on doit voir la liste des  boissons qui la composent, la quantite  de chaque boisson avec la possibilite de diminuer ou d'augmenter cette quantite, le montant de la boisson qui est calculer automatiquement et se met a jour  quant on diminue ou augmente, 
+-   On doit voir egalement le montant total de la commande, qui elle aussi se met automatiquement a jour en fonction de la variation de la  quantite des boissons
+-  on doit voir le champs type de payement  qui est un champ select:
+        . Si c'est Liquidite, alors on affiche le champ pour la liquite et ce montant doit correspondre au montant total de la commande
+        .   Si c'est Orange Money alors il ya pas de champ a afficher pour ca , 
+        .   Si c'est Hybride, on affiche les champs pour Liquidite et Orange Money
+
+-   On doit avoir le champ status de type select par defaut en attente:
+    .   Si tous les montant sont corrects et on clique sur le bouton valider alors le status devient automatiquement Paye  et on mets ca dans la ;iste des commandes reglees
+    .   Si le montant liquidites ou autre en foncion du type de payement, n'est pas egalement au montant de la commande alors quand on clique sur le bouton valider alors on informe que  la commande est non solde et on demande si on veux enregistrer ca , ci s'est oui alors la commande est enregistrer dans les commandes impayees et le status devient automatiquement impaye
+
+
+
+###################
+
+maintenant je veux que si le type de paiement est Liquidite et que le montant saisi est > au montant total de la commande, on affiche le champ monaie et le status (DE la monaie) . Si le status est Remis et lorsqu'on valide, tout est bon. Sinon si le status est Avoir et lorsqu'on clique sur valider alors l'avoir est directement ajouter a la liste des avoirs
+
+
+############
+
+Je dis que lorsque si le type de payment est liquidite, on a 3 conditions a verifier:
+1. Si le montant remis est egal au montant de la commande, il ya rien a faire, la commande doit etre validee sans soucis
+2.  Si le montant remis par le client est < au montant de la commande alors une erreur est levee pour informer qu'il manque montant de la commande -montant remis
+3.  Si le montant remis par le client > au montant de la commande, on affiche la monaie a rendre  et le status de la monaie:
+        .   Si le status est avoir alors un avoir est automatiquement  fait et ajouter a la liste des avoirs en attente
+        .   Si le status est remis alors pas d'avoir a genrer 
+
+
+Lorsque le type de paiemnt est Orange Money:
+    Alors le montant Orange Money est automatiquement = montant de la commande car le caissier va verifier dans son compte mobile qu'il a recu l'argent et maintenant cliquer
+    sur le bouton pour valider la commande
+
+Lorsque le type est Hybride:
+    .   Si Le montant liquidite + montant Orange Money doit etre >=  moontant de la commande car souvent avec les frais de retrait que le client ajoute desfois, le caissier peut consider
+    ca et ajouter comme Orange Money et dans ce cas , c'est logique que la somme depasse le montant de la commande
+
+    .   Si la somme de montant liquidite et montant Orange Money < montant de la commande alors un message d'erreur est leve pour indiquer qu'il reste 
+    montant de la commande - (montant liquidite + montant Orange Money)
+
+
+
+###############
+
+Pour le paiement Orange Money, Etant donner que le montant_orang == montant de la commande, il n'est pas necessaire d'afficher ce champ comme un champ de saisi mais plutot afficher le montant Orange Money
+Pour le paiement Hybride, Etant donner que le champ Orange Money est calculer automatiquement en faisant la different, au lieu d'afficher les 2 champs
+montant liquidite et montant Orange Money comme champs de saisi, on affiche seulement le champ liquidite comme champ de saisi et on affiche le montant Orange Money
+
+##########
+
+On doit pouvoir pouvoir modifier une commande en  ajoutant une nouvelle boisson
+On doit pouvoir egalement supprimer une commande
+
+############
+
+super :
+maintenant, je veux qu'on ait dans le templates liste_commande, 3 champs choix de type selection unique correspondant aux 3 status de commandes dont le 
+premier sera les commandes en attente, et c'est uniquement les commandes en attente qu'on voit
+2e sera commande payee et c'est uniquement les commandes payees qu'on voit
+3e sera Impayer et c'est les commandes uniquement impeyer qu'on voit.
+
+Les commandes payer et impayer ne soont pas modifiables ni supprimables . On doit voir tous les champs (infos) de la commande comme definit dans la base de donnees
+
+Dans les 3 cas:, on doit avoir un champ de recherche permettant de rechercher selon l'id de la commande, la date et le nom du personnel

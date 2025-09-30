@@ -1,0 +1,8 @@
+# Fichiers de configuration locale et variables d'environnement
+.env
+
+# Répertoire de l'environnement virtuel
+venv/
+
+# Fichiers de base de données
+db.sqlite3

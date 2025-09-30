@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <!-- Titre -->
+  <h2>Ajouter une commande</h2>
+
+  <!-- Formulaire principal (personnel + items dynamiques) -->
+  <form method="post" id="form-ajout-commande">
+    {% csrf_token %}
+
+    <!-- Sélect pour choisir le personnel (widget select fourni par le form) -->
+    <div class="mb-3">
+      {{ form_commande.personnel.label_tag }}
+      {{ form_commande.personnel }}
+    </div>
+
+    <hr>
+
+    <!-- Zone pour les lignes (chaque ligne : select boisson + quantité) -->
+    <h4>Articles de la commande</h4>
+    <div id="items-container">
+      <!-- Ligne template initiale -->
+      <div class="item-row mb-2">
+        <!-- Sélect boisson -->
+        <select name="boisson" class="form-select d-inline w-50" required>
+          <option value="">Sélectionnez une boisson</option>
+          {% for b in boissons %}
+            <option value="{{ b.id }}">{{ b.nom }} — {{ b.prix_unitaire }} F</option>
+          {% endfor %}
+        </select>
+
+        <!-- Quantité -->
+        <input type="number" name="quantite" class="form-control d-inline w-25" placeholder="Quantité" min="1" value="1" required>
+
+        <!-- Bouton supprimer (sera utilisable quand il y a >1 ligne) -->
+        <button type="button" class="btn btn-danger remove-item">Supprimer</button>
+      </div>
+    </div>
+
+    <!-- Boutons : ajouter une boisson / enregistrer la commande -->
+    <div class="mt-3">
+      <button type="button" class="btn btn-secondary" id="add-item">Ajouter une boisson</button>
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+  </form>
+</div>
+
+<!-- SCRIPT : gestion dynamique des lignes (clone + suppression) -->
+<script>
+  // Fonction utilitaire pour cloner une ligne d'items
+  function cloneItemRow() {
+    // Trouver le container et la première ligne
+    const container = document.getElementById('items-container');
+    const firstRow = container.querySelector('.item-row');
+    // Dupliquer la ligne
+    const clone = firstRow.cloneNode(true);
+    // Remettre à zéro les champs
+    const select = clone.querySelector('select');
+    const input = clone.querySelector('input[name="quantite"]');
+    if (select) select.value = '';
+    if (input) input.value = 1;
+    // Attacher listener sur le bouton remove du clone
+    const btnRemove = clone.querySelector('.remove-item');
+    btnRemove.addEventListener('click', function () {
+      // Ne supprimer la ligne que s'il y a plus d'une
+      if (container.querySelectorAll('.item-row').length > 1) {
+        clone.remove();
+      }
+    });
+    // Ajouter le clone au DOM
+    container.appendChild(clone);
+  }
+
+  // Attacher l'événement au bouton "Ajouter une boisson"
+  document.getElementById('add-item').addEventListener('click', cloneItemRow);
+
+  // Attacher le comportement "remove" sur la ligne initiale
+  document.querySelectorAll('.remove-item').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const container = document.getElementById('items-container');
+      if (container.querySelectorAll('.item-row').length > 1) {
+        btn.closest('.item-row').remove();
+      }
+    });
+  });
+
+  // (Optionnel) contrôle front avant soumission : vérifier qu'il y a au moins une boisson choisie
+  document.getElementById('form-ajout-commande').addEventListener('submit', function (e) {
+    const selects = document.querySelectorAll('select[name="boisson"]');
+    let ok = false;
+    selects.forEach(s => { if (s.value) ok = true; });
+    if (!ok) {
+      e.preventDefault();
+      alert('Veuillez sélectionner au moins une boisson.');
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Liste des Avoirs</h2>
+
+  <h4>Avoirs en attente</h4>
+  {% if avoirs_en_attente %}
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Commande</th>
+        <th>Montant</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for avoir in avoirs_en_attente %}
+      <tr>
+        <td>{{ avoir.id }}</td>
+        <td>#{{ avoir.commande.id }}</td>
+        <td>{{ avoir.montant }} F</td>
+        <td>{{ avoir.date_creation }}</td>
+        <td>
+          <a href="{% url 'commandes:regler_avoir' avoir.id %}" class="btn btn-sm btn-success">Régler</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Aucun avoir en attente.</p>
+  {% endif %}
+
+  <h4 class="mt-4">Avoirs réglés</h4>
+  {% if avoirs_regles %}
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Commande</th>
+        <th>Montant</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for avoir in avoirs_regles %}
+      <tr>
+        <td>{{ avoir.id }}</td>
+        <td>#{{ avoir.commande.id }}</td>
+        <td>{{ avoir.montant }} F</td>
+        <td>{{ avoir.date_creation }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Aucun avoir réglé.</p>
+  {% endif %}
+</div>
+{% endblock %}
