@@ -408,6 +408,23 @@ def valider_commande(request, commande_id):
     message_avoir = ""
     message_erreur = ""
 
+    # ==============================
+    # CAS 0: Aucun type de paiement choisi
+    # ==============================
+    if not type_paiement:
+        commande.statut = "impayee"
+        commande.montant_restant = montant_total
+        commande.monnaie_a_rendre = 0
+        commande.statut_monnaie = "non_applicable"
+        commande.save()
+
+        return JsonResponse({
+            "success": True,
+            "statut": commande.get_statut_display(),
+            "statut_valide": False,  # pas payé
+            "message_erreur": "Aucun paiement sélectionné. La commande est marquée comme impayée."
+        })
+
     # -----------------------------
     # Cas 1 : Paiement en liquidité
     # -----------------------------
