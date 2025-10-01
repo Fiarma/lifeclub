@@ -2,14 +2,20 @@
 
 {% block content %}
 <div class="container mt-4">
-  <!-- Titre -->
   <h2>Ajouter une commande</h2>
+  
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
 
-  <!-- Formulaire principal (personnel + items dynamiques) -->
   <form method="post" id="form-ajout-commande">
     {% csrf_token %}
 
-    <!-- Sélect pour choisir le personnel (widget select fourni par le form) -->
     <div class="mb-3">
       {{ form_commande.personnel.label_tag }}
       {{ form_commande.personnel }}
@@ -17,28 +23,27 @@
 
     <hr>
 
-    <!-- Zone pour les lignes (chaque ligne : select boisson + quantité) -->
     <h4>Articles de la commande</h4>
     <div id="items-container">
-      <!-- Ligne template initiale -->
-      <div class="item-row mb-2">
-        <!-- Sélect boisson -->
-        <select name="boisson" class="form-select d-inline w-50" required>
+      <div class="item-row mb-2 d-flex align-items-center gap-2">
+        <select name="boisson" class="form-select w-50 boisson-select" required>
           <option value="">Sélectionnez une boisson</option>
           {% for b in boissons %}
-            <option value="{{ b.id }}">{{ b.nom }} — {{ b.prix_unitaire }} F</option>
+            <option value="{{ b.id }}" 
+                    data-stock="{{ b.stock_actuel }}"
+                    {% if b.stock_actuel <= 0 %}disabled{% endif %}>
+              {{ b.nom }} — {{ b.prix_unitaire }} F 
+              {% if b.stock_actuel <= 0 %}(ÉPUISÉ){% else %}(Stock: {{ b.stock_actuel }}){% endif %}
+            </option>
           {% endfor %}
         </select>
 
-        <!-- Quantité -->
-        <input type="number" name="quantite" class="form-control d-inline w-25" placeholder="Quantité" min="1" value="1" required>
+        <input type="number" name="quantite" class="form-control w-25" placeholder="Quantité" min="1" value="1" required>
 
-        <!-- Bouton supprimer (sera utilisable quand il y a >1 ligne) -->
-        <button type="button" class="btn btn-danger remove-item">Supprimer</button>
+        <button type="button" class="btn btn-danger remove-item flex-shrink-0">Supprimer</button>
       </div>
     </div>
 
-    <!-- Boutons : ajouter une boisson / enregistrer la commande -->
     <div class="mt-3">
       <button type="button" class="btn btn-secondary" id="add-item">Ajouter une boisson</button>
       <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -46,54 +51,166 @@
   </form>
 </div>
 
-<!-- SCRIPT : gestion dynamique des lignes (clone + suppression) -->
+<div id="stock-display" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 150px;
+    min-height: 100px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: none; /* Caché par défaut */
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    pointer-events: none; /* Pour ne pas bloquer les clics */
+">
+    <strong id="stock-boisson-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
+    <span style="font-size: 0.8em; display: block;">Stock Actuel:</span>
+    <span id="stock-boisson-quantite" style="font-size: 2em; font-weight: bold;"></span>
+</div>
+
+
 <script>
-  // Fonction utilitaire pour cloner une ligne d'items
+  // ===============================================
+  // GESTION DU CERCLE DE STOCK
+  // ===============================================
+
+  const stockDisplay = document.getElementById('stock-display');
+  const stockNom = document.getElementById('stock-boisson-nom');
+  const stockQuantite = document.getElementById('stock-boisson-quantite');
+
+  /**
+   * Affiche le cercle de stock et met à jour les informations.
+   */
+  function displayStock(nom, stock) {
+      stockNom.textContent = nom;
+      stockQuantite.textContent = stock;
+      stockDisplay.style.display = 'block';
+      
+      const stockInt = parseInt(stock);
+
+      // Mettre à jour la couleur d'alerte
+      if (stockInt <= 5 && stockInt > 0) {
+          stockDisplay.style.backgroundColor = '#ffc107'; // Jaune (faible)
+      } else if (stockInt === 0) {
+          stockDisplay.style.backgroundColor = '#dc3545'; // Rouge (épuisé)
+      } else {
+          stockDisplay.style.backgroundColor = '#007bff'; // Bleu (normal)
+      }
+  }
+
+  /**
+   * Écouteur déclenché lors de la sélection d'une option.
+   */
+  function handleBoissonChange() {
+      const selectedOption = this.options[this.selectedIndex];
+      const stock = selectedOption.getAttribute('data-stock');
+      const nom = selectedOption.textContent.split('—')[0].trim();
+
+      if (stock !== null) {
+          displayStock(nom, stock);
+      } else {
+          stockDisplay.style.display = 'none';
+      }
+  }
+
+  // ===============================================
+  // GESTION DYNAMIQUE DES LIGNES
+  // ===============================================
+  
+  // Template HTML simplifié (sans les (Stock: X) car c'est géré par le cercle)
+  const itemRowTemplate = `
+      <div class="item-row mb-2 d-flex align-items-center gap-2">
+        <select name="boisson" class="form-select w-50 boisson-select" required>
+          <option value="">Sélectionnez une boisson</option>
+          {% for b in boissons %}
+            <option value="{{ b.id }}" 
+                    data-stock="{{ b.stock_actuel }}"
+                    {% if b.stock_actuel <= 0 %}disabled{% endif %}>
+              {{ b.nom }} — {{ b.prix_unitaire }} F 
+            </option>
+          {% endfor %}
+        </select>
+        <input type="number" name="quantite" class="form-control w-25" placeholder="Quantité" min="1" value="1" required>
+        <button type="button" class="btn btn-danger remove-item flex-shrink-0">Supprimer</button>
+      </div>
+  `;
+  
+  function attachListeners(element) {
+      const select = element.querySelector('.boisson-select');
+      const btnRemove = element.querySelector('.remove-item');
+      const container = document.getElementById('items-container');
+
+      // Attacher l'écouteur de changement pour le cercle de stock
+      if (select) {
+          select.addEventListener('change', handleBoissonChange);
+      }
+
+      // Attacher l'écouteur de suppression
+      if (btnRemove) {
+          btnRemove.addEventListener('click', function () {
+              // Ne supprimer la ligne que s'il y a plus d'une
+              if (container.querySelectorAll('.item-row').length > 1) {
+                  element.remove();
+                  stockDisplay.style.display = 'none'; // Cacher le cercle après suppression
+              }
+          });
+      }
+  }
+  
   function cloneItemRow() {
-    // Trouver le container et la première ligne
     const container = document.getElementById('items-container');
-    const firstRow = container.querySelector('.item-row');
-    // Dupliquer la ligne
-    const clone = firstRow.cloneNode(true);
+    
+    // Créer un élément à partir du template HTML
+    const newRow = document.createElement('div');
+    newRow.innerHTML = itemRowTemplate.trim();
+    const clone = newRow.firstChild; // Récupère le div.item-row
+    
     // Remettre à zéro les champs
     const select = clone.querySelector('select');
     const input = clone.querySelector('input[name="quantite"]');
     if (select) select.value = '';
     if (input) input.value = 1;
-    // Attacher listener sur le bouton remove du clone
-    const btnRemove = clone.querySelector('.remove-item');
-    btnRemove.addEventListener('click', function () {
-      // Ne supprimer la ligne que s'il y a plus d'une
-      if (container.querySelectorAll('.item-row').length > 1) {
-        clone.remove();
-      }
-    });
+    
+    // Attacher les écouteurs sur le clone
+    attachListeners(clone);
+    
     // Ajouter le clone au DOM
     container.appendChild(clone);
   }
 
-  // Attacher l'événement au bouton "Ajouter une boisson"
-  document.getElementById('add-item').addEventListener('click', cloneItemRow);
-
-  // Attacher le comportement "remove" sur la ligne initiale
-  document.querySelectorAll('.remove-item').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const container = document.getElementById('items-container');
-      if (container.querySelectorAll('.item-row').length > 1) {
-        btn.closest('.item-row').remove();
-      }
+  document.addEventListener('DOMContentLoaded', function() {
+    // 1. Initialiser les écouteurs sur les lignes existantes au chargement
+    document.querySelectorAll('.item-row').forEach(row => {
+        attachListeners(row);
     });
-  });
-
-  // (Optionnel) contrôle front avant soumission : vérifier qu'il y a au moins une boisson choisie
-  document.getElementById('form-ajout-commande').addEventListener('submit', function (e) {
-    const selects = document.querySelectorAll('select[name="boisson"]');
-    let ok = false;
-    selects.forEach(s => { if (s.value) ok = true; });
-    if (!ok) {
-      e.preventDefault();
-      alert('Veuillez sélectionner au moins une boisson.');
-    }
+    
+    // 2. Attacher l'événement au bouton "Ajouter une boisson"
+    document.getElementById('add-item').addEventListener('click', cloneItemRow);
+    
+    // 3. (Optionnel) Contrôle front avant soumission 
+    document.getElementById('form-ajout-commande').addEventListener('submit', function (e) {
+      const selects = document.querySelectorAll('select[name="boisson"]');
+      let ok = false;
+      selects.forEach(s => { 
+          // Vérifie si une boisson est sélectionnée et si elle n'est pas "disabled" (épuisée)
+          const optionSelected = s.options[s.selectedIndex];
+          if (s.value && !optionSelected.disabled) {
+              ok = true; 
+          }
+      });
+      
+      if (!ok) {
+        e.preventDefault();
+        alert('Veuillez sélectionner au moins une boisson disponible.');
+      }
+      
+      // La validation du stock est gérée de manière fiable côté serveur (views.py)
+    });
   });
 </script>
 {% endblock %}

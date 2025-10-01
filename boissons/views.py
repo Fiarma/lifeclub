@@ -43,25 +43,42 @@ def add_boisson(request):
 
 # Vue pour éditer une boisson existante
 #@login_required
+# def edit_boisson(request, boisson_id):
+#     # Récupération de l'objet Boisson ou 404 si introuvable
+#     boisson = get_object_or_404(Boisson, id=boisson_id)
+#     # Si soumission du formulaire (POST)
+#     if request.method == "POST":
+#         # Instanciation du formulaire lié à l'instance existante
+#         form = BoissonForm(request.POST, instance=boisson)
+#         # Si le formulaire est valide : on sauvegarde
+#         if form.is_valid():
+#             # Sauvegarde des modifications
+#             form.save()
+#             # Message de succès
+#             messages.success(request, f"La boisson '{boisson.nom}' a été modifiée avec succès.")
+#             # Redirection vers la liste
+#             return redirect("boissons:liste_boissons")
+#     else:
+#         # Pour GET : formulaire pré-rempli avec les données de la boisson
+#         form = BoissonForm(instance=boisson)
+#     # Rendu du template d'édition
+#     return render(request, "boissons/edit_boisson.html", {"form": form, "boisson": boisson})
+
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+@ensure_csrf_cookie
 def edit_boisson(request, boisson_id):
-    # Récupération de l'objet Boisson ou 404 si introuvable
     boisson = get_object_or_404(Boisson, id=boisson_id)
-    # Si soumission du formulaire (POST)
+    
     if request.method == "POST":
-        # Instanciation du formulaire lié à l'instance existante
         form = BoissonForm(request.POST, instance=boisson)
-        # Si le formulaire est valide : on sauvegarde
         if form.is_valid():
-            # Sauvegarde des modifications
             form.save()
-            # Message de succès
             messages.success(request, f"La boisson '{boisson.nom}' a été modifiée avec succès.")
-            # Redirection vers la liste
             return redirect("boissons:liste_boissons")
     else:
-        # Pour GET : formulaire pré-rempli avec les données de la boisson
         form = BoissonForm(instance=boisson)
-    # Rendu du template d'édition
+    
     return render(request, "boissons/edit_boisson.html", {"form": form, "boisson": boisson})
 
 # Vue pour supprimer une boisson (confirmation puis suppression)

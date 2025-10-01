@@ -7,7 +7,6 @@ urlpatterns = [
     path('', views.liste_commandes, name='liste_commandes'),
     path('ajouter/', views.ajouter_commande, name='ajouter_commande'),
     path('avoirs/', views.liste_avoirs, name='liste_avoirs'),
-    path('avoirs/regler/<int:pk>/', views.regler_avoir, name='regler_avoir'),
     path("update-item/<int:item_id>/", views.update_item_quantity, name="update_item"),
     path("valider/<int:commande_id>/", views.valider_commande, name="valider_commande"),
 
@@ -20,4 +19,7 @@ urlpatterns = [
     # Supprimer une commande complète
     path('supprimer-commande/<int:commande_id>/', views.supprimer_commande, name='supprimer_commande'),
 
+    path('avoirs/update/<int:avoir_id>/', views.update_avoir_statut, name='update_avoir_statut'),
+
+    
 ]

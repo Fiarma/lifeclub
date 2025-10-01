@@ -5,94 +5,432 @@
 <div class="container mt-4">
   <h2>Liste des commandes</h2>
 
-  {% for commande in commandes %}
-  <div class="card mb-3 p-3 shadow-sm">
-    <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
-    <p>
-      <strong>Statut :</strong> 
-      <span id="statut-{{ commande.id }}">
-        {{ commande.get_statut_display }}
-      </span>
-    </p>
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="btn-group" role="group" aria-label="Statut des commandes">
+        <input type="radio" class="btn-check" name="statut-filter" id="en_attente" value="en_attente" autocomplete="off" checked>
+        <label class="btn btn-outline-primary" for="en_attente">En attente</label>
 
-    <!-- Liste des boissons -->
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Boisson</th>
-          <th>Quantité</th>
-          <th>Montant</th>
-          <th>Actions</th>
+        <input type="radio" class="btn-check" name="statut-filter" id="payer" value="payer" autocomplete="off">
+        <label class="btn btn-outline-success" for="payer">Payées</label>
 
-        </tr>
-      </thead>
-       <tbody>
-        {% for item in commande.items.all %}
-        <tr id="item-row-{{ item.id }}">
-          <td>{{ item.boisson.nom }}</td>
-          <td>
-            <button class="btn btn-sm btn-secondary"
-                    onclick="updateQuantity({{ item.id }}, 'decrement')">-</button>
-            <span id="item-quantite-{{ item.id }}">{{ item.quantite }}</span>
-            <button class="btn btn-sm btn-secondary"
-                    onclick="updateQuantity({{ item.id }}, 'increment')">+</button>
-          </td>
-          <td><span id="item-montant-{{ item.id }}">{{ item.montant_boisson }}</span> F</td>
-          <td>
-            <button class="btn btn-sm btn-danger" onclick="supprimerItem({{ item.id }})">Supprimer</button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <!-- Ajouter une boisson -->
-    <div class="row mb-2">
-      <div class="col">
-        <select id="nouvelle-boisson-{{ commande.id }}" class="form-select">
-          <option value="">-- Choisir une boisson --</option>
-          {% for boisson in boissons %}
-          <option value="{{ boisson.id }}">{{ boisson.nom }} - {{ boisson.prix_unitaire }} F</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col">
-        <input type="number" id="quantite-nouvelle-{{ commande.id }}" class="form-control" placeholder="Quantité" min="1">
-      </div>
-      <div class="col">
-        <button class="btn btn-primary" onclick="ajouterBoisson({{ commande.id }})">Ajouter</button>
+        <input type="radio" class="btn-check" name="statut-filter" id="impayee" value="impayee" autocomplete="off">
+        <label class="btn btn-outline-danger" for="impayee">Impayées</label>
       </div>
     </div>
-
-    <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
-
-    <!-- Paiement -->
-    <label>Type de paiement :</label>
-    <select id="type-paiement-{{ commande.id }}" class="form-select"
-            onchange="togglePaiementFields({{ commande.id }})">
-      <option value="">-- Choisir --</option>
-      <option value="liquidite">Liquidité</option>
-      <option value="orange_money">Orange Money</option>
-      <option value="hybride">Hybride</option>
-    </select>
-
-    <div id="paiement-fields-{{ commande.id }}" class="mt-2"></div>
-<!-- 
-    <button class="btn btn-success mt-3"
-            onclick="validerCommande({{ commande.id }})">Valider</button> -->
-      
-       <div class="mt-2">
-      <button class="btn btn-success" onclick="validerCommande({{ commande.id }})">Valider</button>
-      <button class="btn btn-danger" onclick="supprimerCommande({{ commande.id }})">Supprimer la commande</button>
-    </div>
-    
   </div>
-  {% empty %}
-  <p>Aucune commande pour le moment.</p>
-  {% endfor %}
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="input-group">
+        <input type="text" id="search-input" class="form-control" placeholder="Rechercher par ID, date ou nom du personnel...">
+        <button class="btn btn-outline-secondary" type="button" id="search-button">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="commandes-container">
+    {% for commande in commandes %}
+    <div class="card mb-3 p-3 shadow-sm commande-card" data-statut="{{ commande.statut }}" data-id="{{ commande.id }}" data-date="{{ commande.date_commande|date:'Y-m-d' }}" data-personnel="{{ commande.personnel.nom }}">
+      <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
+      <p><strong>Date :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+      <p>
+        <strong>Statut :</strong> 
+        <span id="statut-{{ commande.id }}">
+          {{ commande.get_statut_display }}
+        </span>
+      </p>
+
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Boisson</th>
+            <th>Quantité</th>
+            <th>Montant</th>
+            {% if commande.statut == 'en_attente' %}
+            <th>Actions</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in commande.items.all %}
+          <tr id="item-row-{{ item.id }}">
+            <td class="stock-interaction" 
+                data-boisson-nom="{{ item.boisson.nom }}"
+                data-boisson-stock="{{ item.boisson.stock_actuel }}"
+                data-boisson-id="{{ item.boisson.id }}"
+                data-item-id="{{ item.id }}"
+            >
+              {{ item.boisson.nom }}
+            </td>
+            <td>
+              {% if commande.statut == 'en_attente' %}
+              <button class="btn btn-sm btn-secondary"
+                      onclick="updateQuantity({{ item.id }}, 'decrement')">-</button>
+              <span id="item-quantite-{{ item.id }}">{{ item.quantite }}</span>
+              <button class="btn btn-sm btn-secondary"
+                      onclick="updateQuantity({{ item.id }}, 'increment')">+</button>
+              {% else %}
+              <span>{{ item.quantite }}</span>
+              {% endif %}
+            </td>
+            <td><span id="item-montant-{{ item.id }}">{{ item.montant_boisson }}</span> F</td>
+            {% if commande.statut == 'en_attente' %}
+            <td>
+              <button class="btn btn-sm btn-danger" onclick="supprimerItem({{ item.id }})">Supprimer</button>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if commande.statut == 'en_attente' %}
+      <div class="row mb-2">
+        <div class="col">
+          <select id="nouvelle-boisson-{{ commande.id }}" class="form-select">
+            <option value="">-- Choisir une boisson --</option>
+            {% for boisson in boissons %}
+            <option value="{{ boisson.id }}" 
+                    data-stock="{{ boisson.stock_actuel }}"
+                    {% if boisson.stock_actuel <= 0 %}disabled{% endif %}
+            >
+              {{ boisson.nom }} - {{ boisson.prix_unitaire }} F {% if boisson.stock_actuel <= 0 %}(ÉPUISÉ){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col">
+          <input type="number" id="quantite-nouvelle-{{ commande.id }}" class="form-control" placeholder="Quantité" min="1">
+        </div>
+        <div class="col">
+          <button class="btn btn-primary" onclick="ajouterBoisson({{ commande.id }})">Ajouter</button>
+        </div>
+      </div>
+      {% endif %}
+
+      <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
+
+      {% if commande.statut == 'en_attente' %}
+      <label>Type de paiement :</label>
+      <select id="type-paiement-{{ commande.id }}" class="form-select"
+              onchange="togglePaiementFields({{ commande.id }})">
+        <option value="">-- Choisir --</option>
+        <option value="liquidite">Liquidité</option>
+        <option value="orange_money">Orange Money</option>
+        <option value="hybride">Hybride</option>
+      </select>
+
+      <div id="paiement-fields-{{ commande.id }}" class="mt-2"></div>
+
+      <div class="mt-2">
+        <button class="btn btn-success" onclick="validerCommande({{ commande.id }})">Valider</button>
+        <button class="btn btn-info" onclick="imprimerFacture({{ commande.id }})">
+          <i class="fas fa-print"></i> Imprimer
+        </button>
+        <button class="btn btn-danger" onclick="supprimerCommande({{ commande.id }})">Supprimer la commande</button>
+      </div>
+      {% endif %}
+
+      {% if commande.statut != 'en_attente' %}
+      <div class="mt-3 p-2 bg-light rounded">
+        <p><strong>Type de paiement :</strong> {{ commande.get_type_paiement_display }}</p>
+        {% if commande.montant_liquidite %}
+        <p><strong>Montant liquidité :</strong> {{ commande.montant_liquidite }} F</p>
+        {% endif %}
+        {% if commande.montant_orange %}
+        <p><strong>Montant Orange Money :</strong> {{ commande.montant_orange }} F</p>
+        {% endif %}
+        {% if commande.montant_restant %}
+        <p><strong>Montant restant :</strong> {{ commande.montant_restant }} F</p>
+        {% endif %}
+        {% if commande.monnaie_a_rendre %}
+        <p><strong>Monnaie à rendre :</strong> {{ commande.monnaie_a_rendre }} F</p>
+        {% endif %}
+        <button class="btn btn-sm btn-info mt-2" onclick="imprimerFacture({{ commande.id }})">
+            <i class="fas fa-print"></i> Imprimer la facture
+        </button>
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <p id="no-commandes-message">Aucune commande pour le moment.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div id="stock-display" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 150px;
+    min-height: 100px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: none; /* Caché par défaut */
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    text-align: center;
+">
+    <strong id="stock-boisson-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
+    <span style="font-size: 0.8em; display: block;">Stock Actuel:</span>
+    <span id="stock-boisson-quantite" style="font-size: 2em; font-weight: bold;"></span>
 </div>
 
 <script>
+  // ===============================================
+  // GESTION DU CERCLE DE STOCK
+  // ===============================================
+
+  const stockDisplay = document.getElementById('stock-display');
+  const stockNom = document.getElementById('stock-boisson-nom');
+  const stockQuantite = document.getElementById('stock-boisson-quantite');
+
+  /**
+   * Affiche le cercle de stock et met à jour les informations.
+   * Change la couleur en fonction du niveau de stock.
+   */
+  function displayStock(nom, stock) {
+      stockNom.textContent = nom;
+      stockQuantite.textContent = stock;
+      stockDisplay.style.display = 'block';
+      
+      const stockInt = parseInt(stock);
+
+      // Mettre à jour la couleur d'alerte
+      if (stockInt <= 5 && stockInt > 0) {
+          stockDisplay.style.backgroundColor = '#ffc107'; // Jaune (faible)
+      } else if (stockInt === 0) {
+          stockDisplay.style.backgroundColor = '#dc3545'; // Rouge (épuisé)
+      } else {
+          stockDisplay.style.backgroundColor = '#007bff'; // Bleu (normal)
+      }
+  }
+
+  // Écouteurs pour afficher/cacher le stock au survol de la ligne de boisson
+  document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.stock-interaction').forEach(element => {
+          // Au survol de la boisson dans la commande
+          element.addEventListener('mouseenter', function() {
+              const nom = this.getAttribute('data-boisson-nom');
+              const stock = this.getAttribute('data-boisson-stock');
+              displayStock(nom, stock);
+          });
+          
+          // Cacher au départ de la souris
+          element.addEventListener('mouseleave', function() {
+              // Vous pouvez laisser le stock affiché ou le cacher :
+              // stockDisplay.style.display = 'none'; 
+          });
+      });
+  });
+
+  // Filtrage par statut
+  document.querySelectorAll('input[name="statut-filter"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      filterCommandes();
+    });
+  });
+
+  // Recherche
+  document.getElementById('search-button').addEventListener('click', filterCommandes);
+  document.getElementById('search-input').addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') {
+      filterCommandes();
+    }
+  });
+
+  function filterCommandes() {
+    const selectedStatut = document.querySelector('input[name="statut-filter"]:checked').value;
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const commandes = document.querySelectorAll('.commande-card');
+    let visibleCount = 0;
+
+    commandes.forEach(card => {
+      const statut = card.getAttribute('data-statut');
+      const id = card.getAttribute('data-id');
+      const date = card.getAttribute('data-date');
+      const personnel = card.getAttribute('data-personnel').toLowerCase();
+
+      const matchesStatut = selectedStatut === statut;
+      const matchesSearch = !searchTerm || 
+                           id.includes(searchTerm) || 
+                           date.includes(searchTerm) || 
+                           personnel.includes(searchTerm);
+
+      if (matchesStatut && matchesSearch) {
+        card.style.display = 'block';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Gérer le message "Aucune commande"
+    const noCommandesMessage = document.getElementById('no-commandes-message');
+    if (visibleCount === 0) {
+      if (!noCommandesMessage) {
+        const container = document.getElementById('commandes-container');
+        container.innerHTML = '<p id="no-commandes-message">Aucune commande trouvée.</p>';
+      } else {
+        noCommandesMessage.textContent = 'Aucune commande trouvée.';
+        noCommandesMessage.style.display = 'block';
+      }
+    } else if (noCommandesMessage) {
+      noCommandesMessage.style.display = 'none';
+    }
+  }
+
+  // Fonction pour imprimer la facture
+  function imprimerFacture(commandeId) {
+    console.log("Impression de la commande:", commandeId);
+    
+    const commandeCard = document.querySelector(`.commande-card[data-id="${commandeId}"]`);
+    if (!commandeCard) {
+      alert("Erreur: Commande non trouvée");
+      return;
+    }
+
+    // Récupérer les données de base
+    const dateText = commandeCard.querySelector('p:nth-child(2)').textContent.replace('Date : ', '');
+    const personnelText = commandeCard.querySelector('h5').textContent.split(' - ')[1];
+    const totalText = commandeCard.querySelector('#commande-total-' + commandeId).textContent + ' F';
+
+    // Récupérer les items
+    const items = [];
+    const rows = commandeCard.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      const boisson = cells[0].textContent.trim();
+      
+      let quantiteElement = cells[1].querySelector('span');
+      if (!quantiteElement) quantiteElement = cells[1];
+      const quantite = quantiteElement.textContent;
+      
+      let montantElement = cells[2].querySelector('span');
+      if (!montantElement) montantElement = cells[2];
+      const montant = montantElement.textContent.replace(' F', '');
+      
+      const prixUnitaire = (parseFloat(montant) / parseInt(quantite)).toFixed(0);
+      
+      items.push({ boisson, quantite, prixUnitaire, montant });
+    });
+
+    // Construction de l'URL absolue du logo
+    const staticPath = "{% static 'commandes/images/Lifeclub.jpg' %}"; 
+    const logoUrl = window.location.origin + staticPath; 
+
+    // Créer le contenu de la facture (En-tête Facture à gauche, N° à droite)
+    const factureContent = `
+      <div style="font-family: Arial, sans-serif; width: 80mm; padding: 10px; margin: 0 auto;">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+          <div style="margin-bottom: 10px;">
+            <img src="${logoUrl}" alt="Lifeclub Logo" style="max-width: 50mm; max-height: 20mm; display: block; margin: 0 auto;">
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+            <h2 style="margin: 0; color: #007bff; font-size: 1.2em; text-align: left;">FACTURE</h2>
+            <strong style="font-size: 1.1em; color: #333;">N° ${commandeId}</strong>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <p style="margin: 5px 0;"><strong>Date:</strong> ${dateText}</p>
+          <p style="margin: 5px 0;"><strong>Personnel:</strong> ${personnelText}</p>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <th style="text-align: left; padding: 5px; background: #f8f9fa;">Boisson</th>
+              <th style="text-align: center; padding: 5px; background: #f8f9fa;">Qté</th>
+              <th style="text-align: right; padding: 5px; background: #f8f9fa;">Prix U.</th>
+              <th style="text-align: right; padding: 5px; background: #f8f9fa;">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 5px;">${item.boisson}</td>
+                <td style="text-align: center; padding: 5px;">${item.quantite}</td>
+                <td style="text-align: right; padding: 5px;">${item.prixUnitaire} F</td>
+                <td style="text-align: right; padding: 5px;">${item.montant} F</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div style="border-top: 2px solid #000; padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+            <span>TOTAL À PAYER:</span>
+            <span style="color: #007bff;">${totalText}</span>
+          </div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center; color: #666; font-size: 10px;">
+          <p>Merci pour votre commande</p>
+          <p>Émis le: ${new Date().toLocaleDateString('fr-FR')}</p>
+        </div>
+      </div>
+    `;
+
+    // Ouvrir une nouvelle fenêtre et lancer directement l'impression
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Facture Commande #${commandeId}</title>
+        <style>
+          @media print {
+            @page { 
+              margin: 0; 
+              size: 80mm auto;
+            }
+            body { 
+              margin: 0; 
+              padding: 10px;
+              width: 80mm;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+          }
+          body { 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            width: 80mm;
+          }
+        </style>
+      </head>
+      <body>
+        ${factureContent}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            }, 500);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }
+
+  // Initialiser le filtrage au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    filterCommandes();
+  });
+
+  // Fonction pour mettre à jour la quantité (Gère la décrémentation/incrémentation du stock)
   function updateQuantity(itemId, action) {
     fetch(`/commandes/update-item/${itemId}/`, {
       method: "POST",
@@ -105,13 +443,119 @@
     .then(response => response.json())
     .then(data => {
       if (data.success) {
+        const commandeId = data.commande_id;
+        
         if (data.deleted) {
-          document.getElementById(`item-row-${data.item_id}`).remove();
+          document.getElementById(`item-row-${itemId}`).remove();
         } else {
           document.getElementById(`item-quantite-${data.item_id}`).innerText = data.quantite;
           document.getElementById(`item-montant-${data.item_id}`).innerText = data.item_montant;
         }
+        document.getElementById(`commande-total-${commandeId}`).innerText = data.commande_total;
+        
+        // GESTION DU STOCK APRÈS MISE À JOUR
+        if (data.new_stock !== undefined) {
+            // Mise à jour de l'affichage du cercle
+            displayStock(data.boisson_nom, data.new_stock);
+            
+            // Rechargement pour mettre à jour la liste des boissons si un stock est revenu à > 0
+            location.reload(); 
+        }
+
+      } else {
+          alert(data.error || "Erreur lors de la mise à jour : Stock épuisé.");
+      }
+    });
+  }
+
+  // Fonction pour ajouter une boisson (Vérifie le stock)
+  function ajouterBoisson(commandeId) {
+    const boissonSelect = document.getElementById(`nouvelle-boisson-${commandeId}`);
+    const boissonId = boissonSelect.value;
+    const quantite = document.getElementById(`quantite-nouvelle-${commandeId}`).value || 1;
+    const selectedOption = boissonSelect.querySelector(`option[value="${boissonId}"]`);
+    // Le contrôle de stock a été déplacé côté serveur (views.py) pour plus de fiabilité.
+
+    if (!boissonId) {
+      alert("Veuillez choisir une boisson.");
+      return;
+    }
+    
+    fetch(`/commandes/ajouter-boisson/${commandeId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: `boisson_id=${boissonId}&quantite=${quantite}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        
+        // GESTION DU STOCK APRÈS AJOUT
+        if (data.new_stock !== undefined) {
+            displayStock(data.boisson_nom, data.new_stock);
+        }
+
+        // Rechargement nécessaire pour afficher le nouvel item dans la table et mettre à jour le total
+        location.reload(); 
+      } else {
+        alert(data.message || "Erreur lors de l'ajout.");
+      }
+    });
+  }
+
+
+  function supprimerItem(itemId) {
+    if (!confirm("Voulez-vous vraiment supprimer cet article ? Cette quantité sera remise en stock.")) return;
+
+    fetch(`/commandes/supprimer-item/${itemId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById(`item-row-${itemId}`).remove();
         document.getElementById(`commande-total-${data.commande_id}`).innerText = data.commande_total;
+        
+        // GESTION DU STOCK APRÈS SUPPRESSION
+        if (data.new_stock !== undefined) {
+            // Afficher le stock mis à jour
+            displayStock(data.boisson_nom, data.new_stock);
+            
+            // Recharger la page pour garantir la cohérence (mise à jour du SELECT)
+            location.reload(); 
+        }
+
+      } else {
+        alert(data.message || "Erreur lors de la suppression.");
+      }
+    });
+  }
+
+  function supprimerCommande(commandeId) {
+    if (!confirm("Voulez-vous vraiment supprimer cette commande ? Si elle est en attente, le stock sera réajusté.")) return;
+
+    fetch(`/commandes/supprimer-commande/${commandeId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        // Après la suppression, recharger pour mettre à jour la liste des commandes et le stock
+        location.reload();
+      } else {
+        alert(data.message || "Erreur lors de la suppression.");
       }
     });
   }
@@ -137,7 +581,6 @@
         </div>
       `;
     } else if (type === "orange_money") {
-      // Affiche le montant exact en lecture seule
       container.innerHTML = `
         <p><strong>Montant Orange Money :</strong> ${total} F</p>
       `;
@@ -147,7 +590,6 @@
                oninput="updateOrangeHybride(${commandeId}, ${total})">
         <p><strong>Montant Orange Money :</strong> <span id="orange-${commandeId}">${total}</span> F</p>
       `;
-      // Initialise le champ Orange Money
       updateOrangeHybride(commandeId, total);
     }
   }
@@ -188,87 +630,26 @@
     })
     .then(response => response.json())
     .then(data => {
-      document.getElementById(`statut-${commandeId}`).innerText = data.statut;
-
-      if (data.avoir_cree) {
-        alert(data.message_avoir);
-      }
-
-      if (!data.statut_valide && data.message_erreur) {
-        alert(data.message_erreur);
-      }
-    });
-  }
-
-  ////////////////////////////////
-
-
-  function ajouterBoisson(commandeId) {
-    const boissonId = document.getElementById(`nouvelle-boisson-${commandeId}`).value;
-    const quantite = document.getElementById(`quantite-nouvelle-${commandeId}`).value || 1;
-
-    if (!boissonId) {
-      alert("Veuillez choisir une boisson.");
-      return;
-    }
-
-    fetch(`/commandes/ajouter-boisson/${commandeId}/`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": "{{ csrf_token }}",
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: `boisson_id=${boissonId}&quantite=${quantite}`
-    })
-    .then(response => response.json())
-    .then(data => {
       if (data.success) {
-        location.reload(); // Recharge la page pour afficher la nouvelle boisson
-      } else {
-        alert(data.message || "Erreur lors de l'ajout.");
-      }
-    });
-  }
+        document.getElementById(`statut-${commandeId}`).innerText = data.statut;
+        
+        const commandeCard = document.querySelector(`[data-id="${commandeId}"]`);
+        commandeCard.setAttribute('data-statut', data.statut_valide ? 'payer' : 'impayee');
 
-  function supprimerItem(itemId) {
-    fetch(`/commandes/supprimer-item/${itemId}/`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": "{{ csrf_token }}",
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        document.getElementById(`item-row-${itemId}`).remove();
-        document.getElementById(`commande-total-${data.commande_id}`).innerText = data.commande_total;
-      } else {
-        alert(data.message || "Erreur lors de la suppression.");
-      }
-    });
-  }
+        if (data.avoir_cree) {
+          alert(data.message_avoir);
+        }
 
-  function supprimerCommande(commandeId) {
-    if (!confirm("Voulez-vous vraiment supprimer cette commande ?")) return;
+        if (!data.statut_valide && data.message_erreur) {
+          alert(data.message_erreur);
+        }
 
-    fetch(`/commandes/supprimer/${commandeId}/`, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": "{{ csrf_token }}",
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        document.getElementById(`commande-card-${commandeId}`).remove();
-      } else {
-        alert(data.message || "Erreur lors de la suppression.");
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
       }
     });
   }
 </script>
-
 
 {% endblock %}

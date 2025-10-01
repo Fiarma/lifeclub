@@ -56,10 +56,22 @@ On doit pouvoir egalement supprimer une commande
 
 super :
 maintenant, je veux qu'on ait dans le templates liste_commande, 3 champs choix de type selection unique correspondant aux 3 status de commandes dont le 
-premier sera les commandes en attente, et c'est uniquement les commandes en attente qu'on voit
-2e sera commande payee et c'est uniquement les commandes payees qu'on voit
-3e sera Impayer et c'est les commandes uniquement impeyer qu'on voit.
+.   premier sera les commandes en attente qui est celui par defaut coche, et c'est uniquement les commandes en attente qu'on voit dont le code est exactement le templates actuel
 
-Les commandes payer et impayer ne soont pas modifiables ni supprimables . On doit voir tous les champs (infos) de la commande comme definit dans la base de donnees
+Une fois la commande valider, si son status est payer, elle s'ajoute automatiquement a liste des commandes payees. Sinon, elle s'ajoute a la liste des commandes impayees.
+On doit voir tous les champs (infos) de la commande comme definit dans la base de donnees
+
+
+.   2e sera commande payee et c'est uniquement les commandes payees qu'on voit
+
+.   3e sera Impayer et c'est les commandes uniquement impeyer qu'on voit.
 
 Dans les 3 cas:, on doit avoir un champ de recherche permettant de rechercher selon l'id de la commande, la date et le nom du personnel
+
+
+############################
+
+Je veux qu'on  puisse afficher un cercle a l'angle droit  le nom de la boisson et son stock actuel de sorte que son stock soit automatiquement mis a jour 
+selon  que l'on augmente ou diminue sa quantite dans la commande. Ce que je veux dire est que pour chaque boisson, lorsque dans la commande, l'intersaction a lieu sur celle-ci,
+automatiquement dans le cercle, le nom de la boisson avec son stock actuel, ce qui va permettre au caissier de suivre  l'evolution du stock de chaque boisson lors de la vente.
+Egalement, lorsque ce stock vaut 0, on ne peut plus ajouter cette boisson  dans une commande etat  donne que le stock est epuise

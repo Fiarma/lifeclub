@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 <div class="container mt-4">
   <h2>Liste des Avoirs</h2>
@@ -11,19 +12,25 @@
         <th>ID</th>
         <th>Commande</th>
         <th>Montant</th>
-        <th>Date</th>
-        <th>Action</th>
+        <th>Date de Création</th>
+        <th>Statut</th>
       </tr>
     </thead>
     <tbody>
       {% for avoir in avoirs_en_attente %}
-      <tr>
+      <tr id="avoir-row-{{ avoir.id }}">
         <td>{{ avoir.id }}</td>
-        <td>#{{ avoir.commande.id }}</td>
-        <td>{{ avoir.montant }} F</td>
-        <td>{{ avoir.date_creation }}</td>
         <td>
-          <a href="{% url 'commandes:regler_avoir' avoir.id %}" class="btn btn-sm btn-success">Régler</a>
+          <a href="{% url 'commandes:liste_commandes' %}?id={{ avoir.commande.id }}">#{{ avoir.commande.id }}</a>
+        </td>
+        <td>{{ avoir.montant }} F</td>
+        <td>{{ avoir.date_creation|date:"d/m/Y H:i" }}</td>
+        <td>
+          <select class="form-select form-select-sm"
+                  onchange="changerStatutAvoir({{ avoir.id }}, this.value, '{{ avoir.montant }} F')">
+            <option value="en_attente" {% if avoir.statut == 'en_attente' %}selected{% endif %}>En attente</option>
+            <option value="regle" {% if avoir.statut == 'regle' %}selected{% endif %}>Réglé</option>
+          </select>
         </td>
       </tr>
       {% endfor %}
@@ -41,16 +48,22 @@
         <th>ID</th>
         <th>Commande</th>
         <th>Montant</th>
-        <th>Date</th>
+        <th>Date de Création</th>
+        <th>Date de Règlement</th>
       </tr>
     </thead>
     <tbody>
       {% for avoir in avoirs_regles %}
       <tr>
         <td>{{ avoir.id }}</td>
-        <td>#{{ avoir.commande.id }}</td>
+        <td>
+          <a href="{% url 'commandes:liste_commandes' %}?id={{ avoir.commande.id }}">#{{ avoir.commande.id }}</a>
+        </td>
         <td>{{ avoir.montant }} F</td>
-        <td>{{ avoir.date_creation }}</td>
+        <td>{{ avoir.date_creation|date:"d/m/Y H:i" }}</td>
+        
+        <td>{{ avoir.date_reglement|date:"d/m/Y H:i"|default:"N/A" }}</td>
+        
       </tr>
       {% endfor %}
     </tbody>
@@ -59,4 +72,38 @@
   <p>Aucun avoir réglé.</p>
   {% endif %}
 </div>
+
+<script>
+  function changerStatutAvoir(avoirId, newStatut, montant) {
+    if (newStatut === "regle") {
+      if (!confirm(`Confirmez-vous la restitution de cet avoir #${avoirId} d'un montant de ${montant} ?`)) {
+        document.querySelector(`#avoir-row-${avoirId} select`).value = "en_attente";
+        return;
+      }
+    }
+
+    fetch(`/commandes/avoirs/update/${avoirId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: `statut=${newStatut}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        location.reload(); 
+      } else {
+        alert(data.message);
+      }
+    })
+    .catch(error => {
+        console.error("Erreur de connexion:", error);
+        alert("Une erreur de connexion s'est produite.");
+        document.querySelector(`#avoir-row-${avoirId} select`).value = "en_attente";
+    });
+  }
+</script>
 {% endblock %}
