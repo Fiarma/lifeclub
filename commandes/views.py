@@ -29,213 +29,6 @@ from django.shortcuts import render
 from .models import Commande, Boisson
 from django.db.models import Q
 
-# def liste_commandes(request):
-#     # Récupération des filtres GET
-#     commande_id = request.GET.get("id")
-#     search_term = request.GET.get("search", "").strip().lower()
-#     statut_filter = request.GET.get("statut", "").strip().lower()  # en_attente, payer, impayee
-
-#     # Initialisation des querysets vides
-#     commandes_en_attente = Commande.objects.none()
-#     commandes_payees = Commande.objects.none()
-#     commandes_impayees = Commande.objects.none()
-
-#     # Fonction pour filtrer selon id et search
-#     def filtre_commande(qs):
-#         if commande_id:
-#             qs = qs.filter(id=commande_id)
-#         if search_term:
-#             qs = qs.filter(
-#                 Q(personnel__nom__icontains=search_term) |
-#                 Q(date_commande__icontains=search_term) |
-#                 Q(id__icontains=search_term)
-#             )
-#         return qs
-
-#     # Filtrage par statut
-#     if not statut_filter or statut_filter == "en_attente":
-#         commandes_en_attente = filtre_commande(
-#             Commande.objects.prefetch_related('items', 'items__boisson')
-#                             .filter(statut="en_attente")
-#                             .order_by('-date_commande')
-#         )
-
-#     if not statut_filter or statut_filter == "payer":
-#         commandes_payees = filtre_commande(
-#             Commande.objects.prefetch_related('items', 'items__boisson')
-#                             .filter(statut="payer")
-#                             .order_by('-date_commande')
-#         )
-
-#     if not statut_filter or statut_filter == "impayee":
-#         commandes_impayees = filtre_commande(
-#             Commande.objects.prefetch_related('items', 'items__boisson')
-#                             .filter(statut="impayee")
-#                             .order_by('-date_commande')
-#         )
-
-#     boisson_list = Boisson.objects.all()
-
-#     context = {
-#         "commandes_en_attente": commandes_en_attente,
-#         "commandes_payees": commandes_payees,
-#         "commandes_impayees": commandes_impayees,
-#         "boissons": boisson_list,
-#         "commande_id_recherchee": commande_id,
-#         "search_term": search_term,
-#         "statut_filter": statut_filter
-#     }
-
-#     return render(request, "commandes/liste_commandes.html", context)
-
-
-# commandes/views.py (Ceci est la version définitive)
-
-from django.shortcuts import render
-from django.db.models import Q 
-from .models import Commande, Boisson 
-
-# def liste_commandes(request):
-#     commande_id_from_avoir = request.GET.get("id")
-#     search_term = request.GET.get("search", "").strip()
-#     statut_filter = request.GET.get("statut", "").strip()
-
-#     # --- ÉTAPE 1: Logique de filtrage principale (ID de l'avoir PRÉVAUT) ---
-#     if commande_id_from_avoir:
-#         # Avoir cliqué : Afficher uniquement cette commande si PAYÉE
-#         commandes_base_qs = Commande.objects.filter(
-#             id=commande_id_from_avoir,
-#             statut='payer'
-#         ).prefetch_related('items', 'items__boisson')
-#         statut_filter = 'payer' 
-        
-#     else:
-#         # Comportement normal : Appliquer recherche et statut
-#         commandes_base_qs = Commande.objects.prefetch_related('items', 'items__boisson').all()
-        
-#         if search_term:
-#             commandes_base_qs = commandes_base_qs.filter(
-#                 Q(personnel__nom__icontains=search_term) |
-#                 Q(date_commande__icontains=search_term) |
-#                 Q(id__icontains=search_term)
-#             )
-            
-#         if statut_filter:
-#             commandes_base_qs = commandes_base_qs.filter(statut=statut_filter)
-        
-#         if not statut_filter:
-#             statut_filter = 'en_attente' # Défaut pour l'affichage UI
-        
-        
-#     # --- ÉTAPE 2: Séparation par statut (pour le template) ---
-    
-#     # Initialisation des listes
-#     commandes_en_attente = Commande.objects.none()
-#     commandes_payees = Commande.objects.none()
-#     commandes_impayees = Commande.objects.none()
-
-#     if commande_id_from_avoir or statut_filter == 'payer':
-#         # Si c'est l'avoir ou si le filtre est explicitement 'payer'
-#         commandes_payees = commandes_base_qs.order_by('-date_commande')
-#     elif statut_filter == 'impayee':
-#         commandes_impayees = commandes_base_qs.order_by('-date_commande')
-#     elif statut_filter == 'en_attente' or not statut_filter:
-#         # Cas par défaut : statut='en_attente' (ou aucun filtre)
-#         # Si aucun filtre de statut n'est appliqué (statut_filter vide), 
-#         # on doit afficher les commandes en attente pour le cas par défaut.
-#         if not commande_id_from_avoir:
-#             commandes_en_attente = commandes_base_qs.filter(statut='en_attente').order_by('-date_commande')
-#             commandes_payees = commandes_base_qs.filter(statut='payer').order_by('-date_commande')
-#             commandes_impayees = commandes_base_qs.filter(statut='impayee').order_by('-date_commande')
-#         else:
-#             # Si un ID était présent, on a déjà rempli commandes_payees ci-dessus.
-#             pass
-
-
-#     boisson_list = Boisson.objects.all()
-
-#     context = {
-#         "commandes_en_attente": commandes_en_attente,
-#         "commandes_payees": commandes_payees,
-#         "commandes_impayees": commandes_impayees,
-#         "boissons": boisson_list,
-#         "commande_id_recherchee": commande_id_from_avoir, 
-#         "search_term": search_term,
-#         "statut_filter": statut_filter 
-#     }
-
-#     return render(request, "commandes/liste_commandes.html", context)
-# commandes/views.py
-
-
-
-# def liste_commandes(request):
-#     commande_id_from_avoir = request.GET.get("id")
-#     search_term = request.GET.get("search", "").strip()
-#     statut_filter = request.GET.get("statut", "").strip()
-
-#     # Initialisation des listes à vide
-#     commandes_en_attente = Commande.objects.none()
-#     commandes_payees = Commande.objects.none()
-#     commandes_impayees = Commande.objects.none()
-
-#     # 1. Préparation du QuerySet de base (Recherche + Prefetch)
-#     commandes_base_qs = Commande.objects.prefetch_related('items', 'items__boisson')
-    
-#     if search_term:
-#         commandes_base_qs = commandes_base_qs.filter(
-#             Q(personnel__nom__icontains=search_term) |
-#             Q(date_commande__icontains=search_term) |
-#             Q(id__icontains=search_term)
-#         )
-        
-#     # 2. Gestion de la priorité ID (Avoir)
-#     if commande_id_from_avoir:
-#         # Si un ID d'avoir est présent, afficher uniquement cette commande (si payée)
-#         commandes_base_qs = commandes_base_qs.filter(id=commande_id_from_avoir, statut='payer')
-#         commandes_payees = commandes_base_qs.order_by('-date_commande')
-#         # Le statut actif devient 'payer' pour l'UI
-#         statut_filter = 'payer' 
-
-#     # 3. Logique de Filtrage par Statut
-#     else:
-#         # Déterminer le statut à filtrer réellement
-#         if not statut_filter:
-#             # Si aucun statut n'est spécifié, le statut par défaut est 'en_attente'
-#             current_statut = 'en_attente'
-#         else:
-#             current_statut = statut_filter
-            
-#         # Filtrer le QuerySet de base selon le statut ACTUEL
-#         commandes_filtrees = commandes_base_qs.filter(statut=current_statut).order_by('-date_commande')
-
-#         # Affecter la liste filtrée à la bonne variable de contexte
-#         if current_statut == 'en_attente':
-#             commandes_en_attente = commandes_filtrees
-#         elif current_statut == 'payer':
-#             commandes_payees = commandes_filtrees
-#         elif current_statut == 'impayee':
-#             commandes_impayees = commandes_filtrees
-            
-#         # Mettre à jour statut_filter pour l'UI, même s'il était vide au départ
-#         statut_filter = current_statut 
-
-#     boisson_list = Boisson.objects.all()
-
-#     context = {
-#         "commandes_en_attente": commandes_en_attente,
-#         "commandes_payees": commandes_payees,
-#         "commandes_impayees": commandes_impayees,
-#         "boissons": boisson_list,
-#         "commande_id_recherchee": commande_id_from_avoir,
-#         "search_term": search_term,
-#         "statut_filter": statut_filter # Maintient le statut sélectionné à l'actualisation
-#     }
-
-#     return render(request, "commandes/liste_commandes.html", context)
-
-
-
 
 
 # Dans commandes/views.py
@@ -635,188 +428,6 @@ def update_item_quantity(request, item_id):
         "boisson_nom": boisson.nom,
     })
 
-# -----------------------------
-# Vue : liste des avoirs
-# -----------------------------
-def liste_avoirs(request):
-    avoirs_en_attente = Avoir.objects.filter(statut="en_attente").order_by("-date_creation")
-    avoirs_regles = Avoir.objects.filter(statut="regle").order_by("-date_creation")
-
-    return render(request, "avoirs/liste_avoirs.html", {
-        "avoirs_en_attente": avoirs_en_attente,
-        "avoirs_regles": avoirs_regles,
-    })
-
-
-
-from django.http import JsonResponse # <-- NOUVEL IMPORT
-
-from django.utils import timezone # <-- NOUVEL IMPORT
-
-def update_avoir_statut(request, avoir_id):
-    if request.method == "POST":
-        avoir = get_object_or_404(Avoir, pk=avoir_id)
-        new_statut = request.POST.get("statut")
-
-        if new_statut in dict(Avoir.STATUT_CHOICES):
-            # Logique pour enregistrer la date de règlement
-            if new_statut == 'regle' and avoir.statut != 'regle':
-                avoir.date_reglement = timezone.now()
-            elif new_statut == 'en_attente' and avoir.statut == 'regle':
-                # Optionnel : Si on peut revenir à en_attente, effacer la date
-                avoir.date_reglement = None
-                
-            avoir.statut = new_statut
-            avoir.save()
-            
-            return JsonResponse({
-                "success": True,
-                "message": f"L’avoir {avoir.id} est maintenant {avoir.get_statut_display()}."
-            })
-        return JsonResponse({"success": False, "message": "Statut invalide."})
-    
-    # Assurez-vous d'avoir @require_POST si vous voulez cette ligne
-    return JsonResponse({"success": False, "message": "Méthode non autorisée."})
-
-
-from django.views.decorators.http import require_POST # <-- Nouvel import
-
-# ... (autres vues)
-
-
-
-
-# @require_POST
-# @csrf_exempt
-# def valider_commande(request, commande_id):
-#     # Récupère la commande via son ID
-#     commande = get_object_or_404(Commande, id=commande_id)
-
-#     # Récupère les données envoyées depuis le formulaire
-#     type_paiement = request.POST.get("type_paiement")  # liquidité, orange_money ou hybride
-#     montant_liquidite = float(request.POST.get("montant_liquidite", 0))  # montant liquide saisi
-#     montant_orange = float(request.POST.get("montant_orange", 0))  # montant Orange Money saisi
-#     statut_monnaie = request.POST.get("statut_monnaie")  # remis ou avoir
-
-#     # Mise à jour du type de paiement dans la commande
-#     commande.type_paiement = type_paiement
-#     commande.montant_liquidite = montant_liquidite if montant_liquidite > 0 else None
-#     commande.montant_orange = montant_orange if montant_orange > 0 else None
-
-#     # Récupère le montant total de la commande
-#     montant_total = float(commande.montant_total)
-
-#     # Variables pour le retour JSON
-#     avoir_cree = False
-#     message_avoir = ""
-#     message_erreur = ""
-
-#     # ==============================
-#     # CAS 0: Aucun type de paiement choisi
-#     # ==============================
-#     if not type_paiement:
-#         commande.statut = "impayee"
-#         commande.montant_restant = montant_total
-#         commande.monnaie_a_rendre = 0
-#         commande.statut_monnaie = "non_applicable"
-#         commande.save()
-
-#         return JsonResponse({
-#             "success": True,
-#             "statut": commande.get_statut_display(),
-#             "statut_valide": False,  # pas payé
-#             "message_erreur": "Aucun paiement sélectionné. La commande est marquée comme impayée."
-#         })
-
-#     # -----------------------------
-#     # Cas 1 : Paiement en liquidité
-#     # -----------------------------
-#     if type_paiement == "liquidite":
-#         if montant_liquidite == montant_total:
-#             commande.statut = "payer"
-#             commande.monnaie_a_rendre = 0
-#             commande.montant_restant = 0
-#             commande.statut_monnaie = "non_applicable"
-
-#         elif montant_liquidite < montant_total:
-#             commande.statut = "impayee"
-#             commande.montant_restant = montant_total - montant_liquidite
-#             commande.monnaie_a_rendre = 0
-#             commande.statut_monnaie = "non_applicable"
-#             message_erreur = f"Commande impayée : il manque {commande.montant_restant} F."
-
-#         else:  # montant_liquidite > montant_total
-#             monnaie = montant_liquidite - montant_total
-#             commande.statut = "payer"
-#             commande.monnaie_a_rendre = monnaie
-#             commande.montant_restant = 0
-
-#             if statut_monnaie == "avoir":
-#                 avoir = Avoir.objects.create(
-#                     commande=commande,
-#                     montant=monnaie,
-#                     statut="en_attente"
-#                 )
-#                 avoir_cree = True
-#                 message_avoir = f"Avoir #{avoir.id} de {monnaie} F créé avec succès."
-#                 commande.statut_monnaie = "avoir"
-#                 commande.monnaie_a_rendre = 0
-#             else:
-#                 commande.statut_monnaie = "remis"
-
-#     # -----------------------------
-#     # Cas 2 : Paiement par Orange Money
-#     # -----------------------------
-#     elif type_paiement == "orange_money":
-#         commande.montant_orange = montant_total
-#         commande.statut = "payer"
-#         commande.monnaie_a_rendre = 0
-#         commande.montant_restant = 0
-#         commande.statut_monnaie = "non_applicable"
-
-#     # -----------------------------
-#     # Cas 3 : Paiement hybride (cash + OM)
-#     # -----------------------------
-#     elif type_paiement == "hybride":
-#         total_paye = montant_liquidite + montant_orange
-
-#         if total_paye >= montant_total:
-#             commande.statut = "payer"
-#             commande.montant_restant = 0
-#             # Pas de monnaie à rendre pour les frais supplémentaires
-#             commande.monnaie_a_rendre = 0
-#             commande.statut_monnaie = "non_applicable"
-#             # On ajuste le montant OM pour que le total reste égal au montant de la commande
-#             commande.montant_orange = montant_total - montant_liquidite
-#         else:
-#             commande.statut = "impayee"
-#             commande.montant_restant = montant_total - total_paye
-#             commande.monnaie_a_rendre = 0
-#             commande.statut_monnaie = "non_applicable"
-#             message_erreur = f"Commande impayée : il manque {commande.montant_restant} F."
-
-#     else:
-#         commande.statut = "en_attente"
-#         commande.monnaie_a_rendre = 0
-#         commande.montant_restant = 0
-#         commande.statut_monnaie = "non_applicable"
-
-#     # Sauvegarde des modifications
-#     commande.save()
-
-#     # Réponse JSON envoyée au frontend
-#     return JsonResponse({
-#         "success": True,  # la requête a été traitée correctement
-#         "statut_valide": True if commande.statut == "payer" else False,
-#         "commande_id": commande.id,
-#         "statut": commande.get_statut_display(),
-#         "monnaie": str(commande.monnaie_a_rendre),
-#         "statut_monnaie": commande.statut_monnaie,
-#         "avoir_cree": avoir_cree,
-#         "message_avoir": message_avoir,
-#         "message_erreur": message_erreur,
-#         "montant_restant": str(commande.montant_restant)
-#     })
 
 # Dans commandes/views.py
 
@@ -984,3 +595,130 @@ def valider_commande(request, commande_id):
         "message_erreur": message_erreur,
         "montant_restant": str(commande.montant_restant)
     })
+
+
+
+
+############### Gestion des avoirs ##############
+
+
+# # -----------------------------
+# # Vue : liste des avoirs
+# # -----------------------------
+# def liste_avoirs(request):
+#     avoirs_en_attente = Avoir.objects.filter(statut="en_attente").order_by("-date_creation")
+#     avoirs_regles = Avoir.objects.filter(statut="regle").order_by("-date_creation")
+
+#     return render(request, "avoirs/liste_avoirs.html", {
+#         "avoirs_en_attente": avoirs_en_attente,
+#         "avoirs_regles": avoirs_regles,
+#     })
+
+
+
+# from django.http import JsonResponse # <-- NOUVEL IMPORT
+
+# from django.utils import timezone # <-- NOUVEL IMPORT
+
+# def update_avoir_statut(request, avoir_id):
+#     if request.method == "POST":
+#         avoir = get_object_or_404(Avoir, pk=avoir_id)
+#         new_statut = request.POST.get("statut")
+
+#         if new_statut in dict(Avoir.STATUT_CHOICES):
+#             # Logique pour enregistrer la date de règlement
+#             if new_statut == 'regle' and avoir.statut != 'regle':
+#                 avoir.date_reglement = timezone.now()
+#             elif new_statut == 'en_attente' and avoir.statut == 'regle':
+#                 # Optionnel : Si on peut revenir à en_attente, effacer la date
+#                 avoir.date_reglement = None
+                
+#             avoir.statut = new_statut
+#             avoir.save()
+            
+#             return JsonResponse({
+#                 "success": True,
+#                 "message": f"L’avoir {avoir.id} est maintenant {avoir.get_statut_display()}."
+#             })
+#         return JsonResponse({"success": False, "message": "Statut invalide."})
+    
+#     # Assurez-vous d'avoir @require_POST si vous voulez cette ligne
+#     return JsonResponse({"success": False, "message": "Méthode non autorisée."})
+
+# Dans commandes/views.py
+
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Q # Import pour la recherche
+from django.utils import timezone
+from .models import Avoir # Assurez-vous d'importer Avoir
+
+def liste_avoirs(request):
+    # Récupération des paramètres de l'URL
+    search_term = request.GET.get("search", "").strip()
+    statut_filter = request.GET.get("statut", "en_attente").strip() # 'en_attente' par défaut
+
+    # QuerySet de base avec prefetch pour la commande
+    avoirs_qs = Avoir.objects.select_related('commande')
+    
+    # 1. Logique de Recherche
+    if search_term:
+        # Recherche par ID de l'avoir, ID de la commande ou date de création
+        avoirs_qs = avoirs_qs.filter(
+            Q(id__icontains=search_term) |
+            Q(commande__id__icontains=search_term) |
+            Q(date_creation__icontains=search_term) 
+        )
+        
+    # 2. Logique de Filtrage par Statut
+    if statut_filter in ['en_attente', 'regle']:
+        avoirs_filtres = avoirs_qs.filter(statut=statut_filter)
+    else:
+        # Afficher tous si le filtre est invalide (ou ne rien filtrer si c'est le choix)
+        avoirs_filtres = avoirs_qs
+        
+    # 3. Tri
+    # On trie toujours par la date la plus récente, qu'elle soit de création ou de règlement si réglé
+    if statut_filter == 'regle':
+        avoirs_final = avoirs_filtres.order_by('-date_reglement', '-date_creation')
+    else:
+        avoirs_final = avoirs_filtres.order_by('-date_creation')
+
+    # Affectation des listes pour le template
+    # Seule la liste filtrée est passée au template, les deux autres sont vides
+    avoirs_en_attente = avoirs_final if statut_filter == 'en_attente' else Avoir.objects.none()
+    avoirs_regles = avoirs_final if statut_filter == 'regle' else Avoir.objects.none()
+
+    context = {
+        "avoirs_en_attente": avoirs_en_attente,
+        "avoirs_regles": avoirs_regles,
+        "search_term": search_term,
+        "statut_filter": statut_filter, # Utilisé pour marquer le bouton actif
+    }
+
+    return render(request, "avoirs/liste_avoirs.html", context) # Assurez-vous que le chemin du template est correct
+
+# --- AJOUTER LA VUE POUR LA MISE À JOUR DU STATUT (NON DEMANDÉE MAIS CRUCIALE) ---
+
+@require_POST
+@csrf_exempt
+def update_avoir_statut(request, avoir_id):
+    avoir = get_object_or_404(Avoir, id=avoir_id)
+    new_statut = request.POST.get("statut")
+    
+    if new_statut not in ['en_attente', 'regle']:
+        return JsonResponse({"success": False, "message": "Statut invalide."}, status=400)
+
+    if new_statut == 'regle' and avoir.statut == 'en_attente':
+        avoir.statut = 'regle'
+        avoir.date_reglement = timezone.now() # Enregistre la date de règlement
+        avoir.save()
+        return JsonResponse({"success": True, "message": f"Avoir #{avoir.id} réglé avec succès. Date enregistrée."})
+        
+    elif new_statut == 'en_attente' and avoir.statut == 'regle':
+        # Permettre de remettre en attente (annuler)
+        avoir.statut = 'en_attente'
+        avoir.date_reglement = None # Supprimer la date de règlement
+        avoir.save()
+        return JsonResponse({"success": True, "message": f"Avoir #{avoir.id} remis en attente."})
+
+    return JsonResponse({"success": True, "message": "Aucun changement de statut nécessaire."})

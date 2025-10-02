@@ -4,73 +4,130 @@
 <div class="container mt-4">
   <h2>Liste des Avoirs</h2>
 
-  <h4>Avoirs en attente</h4>
-  {% if avoirs_en_attente %}
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Commande</th>
-        <th>Montant</th>
-        <th>Date de Création</th>
-        <th>Statut</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for avoir in avoirs_en_attente %}
-      <tr id="avoir-row-{{ avoir.id }}">
-        <td>{{ avoir.id }}</td>
-        <td>
-          <a href="{% url 'commandes:liste_commandes' %}?id={{ avoir.commande.id }}">#{{ avoir.commande.id }}</a>
-        </td>
-        <td>{{ avoir.montant }} F</td>
-        <td>{{ avoir.date_creation|date:"d/m/Y H:i" }}</td>
-        <td>
-          <select class="form-select form-select-sm"
-                  onchange="changerStatutAvoir({{ avoir.id }}, this.value, '{{ avoir.montant }} F')">
-            <option value="en_attente" {% if avoir.statut == 'en_attente' %}selected{% endif %}>En attente</option>
-            <option value="regle" {% if avoir.statut == 'regle' %}selected{% endif %}>Réglé</option>
-          </select>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p>Aucun avoir en attente.</p>
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="btn-group" role="group" aria-label="Statut des avoirs">
+        
+        {% url 'commandes:liste_avoirs' as base_url %}
+        
+        {# Lien EN ATTENTE : Par défaut #}
+        <a href="{{ base_url }}?statut=en_attente{% if search_term %}&search={{ search_term }}{% endif %}" 
+           class="btn btn-outline-primary {% if statut_filter == 'en_attente' %}active{% endif %}">
+          En attente
+        </a>
+        
+        {# Lien RÉGLÉS #}
+        <a href="{{ base_url }}?statut=regle{% if search_term %}&search={{ search_term }}{% endif %}" 
+           class="btn btn-outline-success {% if statut_filter == 'regle' %}active{% endif %}">
+          Réglés
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <form method="get" class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Rechercher par ID Avoir ou ID Commande..." value="{{ search_term|default_if_none:'' }}">
+        
+        {# Transmettre le statut actif pour maintenir la liste filtrée après la recherche #}
+        {% if statut_filter %}
+          <input type="hidden" name="statut" value="{{ statut_filter }}">
+        {% endif %}
+        
+        <button class="btn btn-outline-secondary" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  {% if statut_filter == 'en_attente' %}
+    <h4 class="mt-4">Avoirs en attente</h4>
+    {% if avoirs_en_attente %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID Avoir</th>
+          <th>ID Commande</th>
+          <th>Montant</th>
+          <th>Date de Création</th>
+          <th>Statut</th>  {# Colonne Statut #}
+          <th>Action</th>  {# Nouvelle Colonne Action #}
+        </tr>
+      </thead>
+      <tbody>
+        {% for avoir in avoirs_en_attente %}
+        <tr id="avoir-row-{{ avoir.id }}">
+          <td>{{ avoir.id }}</td>
+          <td>
+            <a href="{% url 'commandes:liste_commandes' %}?id={{ avoir.commande.id }}">#{{ avoir.commande.id }}</a>
+          </td>
+          <td>{{ avoir.montant }} F</td>
+          <td>{{ avoir.date_creation|date:"d/m/Y H:i" }}</td>
+          
+          {# Colonne Statut #}
+          <td>
+            <select class="form-select form-select-sm"
+                    onchange="changerStatutAvoir({{ avoir.id }}, this.value, '{{ avoir.montant }} F')">
+              <option value="en_attente" {% if avoir.statut == 'en_attente' %}selected{% endif %}>En attente</option>
+              <option value="regle" {% if avoir.statut == 'regle' %}selected{% endif %}>Réglé</option>
+            </select>
+          </td>
+          
+          {# Colonne Action (Impression) #}
+          <td>
+            <button class="btn btn-sm btn-info" 
+                    onclick="imprimerAvoir({{ avoir.id }}, '{{ avoir.montant }}', '{{ avoir.commande.id }}', '{{ avoir.date_creation|date:"d/m/Y H:i" }}')" 
+                    title="Imprimer le Bon d'Avoir">
+                <i class="fas fa-print"></i>
+            </button>
+          </td>
+          
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>Aucun avoir en attente trouvé.</p>
+    {% endif %}
+
+  {% elif statut_filter == 'regle' %}
+    <h4 class="mt-4">Avoirs réglés</h4>
+    {% if avoirs_regles %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID Avoir</th>
+          <th>ID Commande</th>
+          <th>Montant</th>
+          <th>Date de Création</th>
+          <th>Date de Règlement</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for avoir in avoirs_regles %}
+        <tr>
+          <td>{{ avoir.id }}</td>
+          <td>
+            <a href="{% url 'commandes:liste_commandes' %}?id={{ avoir.commande.id }}">#{{ avoir.commande.id }}</a>
+          </td>
+          <td>{{ avoir.montant }} F</td>
+          <td>{{ avoir.date_creation|date:"d/m/Y H:i" }}</td>
+          
+          <td>{{ avoir.date_reglement|date:"d/m/Y H:i"|default:"N/A" }}</td>
+          
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>Aucun avoir réglé trouvé.</p>
+    {% endif %}
+
   {% endif %}
 
-  <h4 class="mt-4">Avoirs réglés</h4>
-  {% if avoirs_regles %}
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Commande</th>
-        <th>Montant</th>
-        <th>Date de Création</th>
-        <th>Date de Règlement</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for avoir in avoirs_regles %}
-      <tr>
-        <td>{{ avoir.id }}</td>
-        <td>
-          <a href="{% url 'commandes:liste_commandes' %}?id={{ avoir.commande.id }}">#{{ avoir.commande.id }}</a>
-        </td>
-        <td>{{ avoir.montant }} F</td>
-        <td>{{ avoir.date_creation|date:"d/m/Y H:i" }}</td>
-        
-        <td>{{ avoir.date_reglement|date:"d/m/Y H:i"|default:"N/A" }}</td>
-        
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p>Aucun avoir réglé.</p>
-  {% endif %}
 </div>
 
 <script>
@@ -80,9 +137,15 @@
         document.querySelector(`#avoir-row-${avoirId} select`).value = "en_attente";
         return;
       }
+    } else if (newStatut === "en_attente") {
+         if (!confirm(`Confirmez-vous l'annulation du règlement de cet avoir #${avoirId} et sa remise en attente ?`)) {
+            document.querySelector(`#avoir-row-${avoirId} select`).value = "regle";
+            return;
+        }
     }
 
-    fetch(`/commandes/avoirs/update/${avoirId}/`, {
+    // Le chemin d'accès à la vue doit correspondre à votre urls.py
+    fetch(`/commandes/avoirs/update/${avoirId}/`, { 
       method: "POST",
       headers: {
         "X-CSRFToken": "{{ csrf_token }}",
@@ -102,8 +165,89 @@
     .catch(error => {
         console.error("Erreur de connexion:", error);
         alert("Une erreur de connexion s'est produite.");
-        document.querySelector(`#avoir-row-${avoirId} select`).value = "en_attente";
+        // Revert UI change on error
+        document.querySelector(`#avoir-row-${avoirId} select`).value = (newStatut === 'regle' ? 'en_attente' : 'regle');
     });
+  }
+
+  function imprimerAvoir(avoirId, montant, commandeId, dateCreation) {
+    const staticPath = "{% static 'commandes/images/Lifeclub.jpg' %}"; 
+    const logoUrl = window.location.origin + staticPath; 
+
+    const factureContent = `
+      <div style="font-family: Arial, sans-serif; width: 80mm; padding: 10px; margin: 0 auto;">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+          <div style="margin-bottom: 10px;">
+            <img src="${logoUrl}" alt="Lifeclub Logo" style="max-width: 50mm; max-height: 20mm; display: block; margin: 0 auto;">
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+            <h2 style="margin: 0; color: #007bff; font-size: 1.2em; text-align: left;">BON D'AVOIR</h2>
+            <strong style="font-size: 1.1em; color: #333;">N° ${avoirId}</strong>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px; border: 1px dashed #000; padding: 10px; text-align: center;">
+          <p style="margin: 0; font-size: 2em; font-weight: bold; color: #dc3545;">
+            ${montant} F
+          </p>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <p style="margin: 5px 0;"><strong>Date de Création:</strong> ${dateCreation}</p>
+          <p style="margin: 5px 0;"><strong>Commande d'origine:</strong> #${commandeId}</p>
+          <p style="margin: 5px 0; font-weight: bold;">Valable pour une prochaine commande.</p>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center; color: #666; font-size: 10px;">
+          <p>Présentez ce bon pour un règlement futur.</p>
+          <p>Émis le: ${new Date().toLocaleDateString('fr-FR')}</p>
+        </div>
+      </div>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Bon d'Avoir #${avoirId}</title>
+        <style>
+          @media print {
+            @page { 
+              margin: 0; 
+              size: 80mm auto;
+            }
+            body { 
+              margin: 0; 
+              padding: 10px;
+              width: 80mm;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+          }
+          body { 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            width: 80mm;
+          }
+        </style>
+      </head>
+      <body>
+        ${factureContent}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            }, 500);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 </script>
 {% endblock %}
