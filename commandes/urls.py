@@ -21,5 +21,6 @@ urlpatterns = [
 
     path('avoirs/update/<int:avoir_id>/', views.update_avoir_statut, name='update_avoir_statut'),
 
-    
+     # Point des Ventes
+    #path('point-des-ventes/', views.point_des_ventes, name='point_des_ventes'),
 ]

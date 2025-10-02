@@ -75,3 +75,29 @@ Je veux qu'on  puisse afficher un cercle a l'angle droit  le nom de la boisson e
 selon  que l'on augmente ou diminue sa quantite dans la commande. Ce que je veux dire est que pour chaque boisson, lorsque dans la commande, l'intersaction a lieu sur celle-ci,
 automatiquement dans le cercle, le nom de la boisson avec son stock actuel, ce qui va permettre au caissier de suivre  l'evolution du stock de chaque boisson lors de la vente.
 Egalement, lorsque ce stock vaut 0, on ne peut plus ajouter cette boisson  dans une commande etat  donne que le stock est epuise
+
+############### Details de la vente du jour ####################
+
+Etant donne une boite de nuit, un jour de vente est defini par ie qu'on commence de 18h00 d'aujourd'hui jusqu'a 6h du matin du jour suivant.
+Par exemple nous sommes aujourd'hui 02-10-2025 (02 octobre 2025) donc la vente du jour sera de 18h00 du 02-10-2025 a 6h du matin du 03-10-2025.
+Donc voila la definition du jour de vente.
+
+Les details de la vente inclus;
+1.  La vente totale de chaque boisson.
+    Pour chaque boisson vendue ce jour la, on  aura le nom de la boisson, son prix unitaire et la quantite totale (somme de toute les quantites de toutes les commandes de ce jour) 
+    et le montant total(qui est le produit de son prix unitaire par la quantite totale)
+
+2.  Le montant total de la vente: 
+    C'est la somme de tous les montants des boissons
+
+3. Le montant total des impayees: c'est la somme des montants restants a payer des commandes impayees
+
+4.  Le montant total des depenses: c'est totale de toutes les depenses de ce jour
+
+5. Le montant total des avances sur salaire: c'est la somme de toutes avances sur salaire de ce jour
+
+6. Montant decaisse: c'est la somme des montant total des impayees, montant total des depenses et montant total des avances sur salaire
+
+7. Chiffre d'affaire realise ce jour: c'est la difference entre le montant total de la vente et le montant decaisse
+
+NB: Tous ces calculs sont faits automatiquement et mis a jour automatiquement

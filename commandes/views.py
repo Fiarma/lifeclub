@@ -722,3 +722,4 @@ def update_avoir_statut(request, avoir_id):
         return JsonResponse({"success": True, "message": f"Avoir #{avoir.id} remis en attente."})
 
     return JsonResponse({"success": True, "message": "Aucun changement de statut nécessaire."})
+
