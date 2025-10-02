@@ -25,6 +25,9 @@ class Commande(models.Model):
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default="en_attente")
     type_paiement = models.CharField(max_length=20, choices=PAIEMENT_CHOICES)
 
+ # NOUVEAU CHAMP : Date de validation (paiement ou passage en impayée)
+    date_validation = models.DateTimeField(null=True, blank=True) 
+    
     # Montants payés
     montant_remis_client = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     montant_orange = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
