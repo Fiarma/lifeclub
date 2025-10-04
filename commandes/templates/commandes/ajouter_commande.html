@@ -22,6 +22,34 @@
     </div>
 
     <hr>
+    
+    <h4>Informations Client</h4>
+    <p class="text-muted"><small>Le numéro de téléphone est obligatoire. L'indicatif 🇧🇫 +226 est sélectionné par défaut.</small></p>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            {{ form_commande.numero_telephone.label_tag }}
+            <div class="input-group">
+                {{ form_commande.code_pays_tel }} 
+                {{ form_commande.numero_telephone }}
+            </div>
+            {% if form_commande.numero_telephone.errors %}
+                <div class="text-danger small">{{ form_commande.numero_telephone.errors }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            {{ form_commande.client_prenom.label_tag }}
+            {{ form_commande.client_prenom }}
+        </div>
+        <div class="col-md-6">
+            {{ form_commande.client_nom.label_tag }}
+            {{ form_commande.client_nom }}
+        </div>
+    </div>
+    <hr>
 
     <h4>Articles de la commande</h4>
     <div id="items-container">
@@ -66,7 +94,7 @@
     z-index: 1000;
     font-family: Arial, sans-serif;
     text-align: center;
-    pointer-events: none; /* Pour ne pas bloquer les clics */
+    pointer-events: none;
 ">
     <strong id="stock-boisson-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
     <span style="font-size: 0.8em; display: block;">Stock Actuel:</span>
@@ -122,7 +150,7 @@
   // GESTION DYNAMIQUE DES LIGNES
   // ===============================================
   
-  // Template HTML simplifié (sans les (Stock: X) car c'est géré par le cercle)
+  // Template HTML simplifié (sans les (Stock: X) dans le sélecteur cloné)
   const itemRowTemplate = `
       <div class="item-row mb-2 d-flex align-items-center gap-2">
         <select name="boisson" class="form-select w-50 boisson-select" required>

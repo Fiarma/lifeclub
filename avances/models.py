@@ -23,10 +23,16 @@ class Avance(models.Model):
     )
 
     # Date où l'avance a été donnée
-    date_avance = models.DateField(
-        default=timezone.now,           # Par défaut : aujourd'hui
-        verbose_name="Date de l'avance"
+    # date_avance = models.DateField(
+    #     default=timezone.now,           # Par défaut : aujourd'hui
+    #     verbose_name="Date de l'avance"
+    # )
+
+    date_avance = models.DateTimeField( 
+        default=timezone.now,           
+        verbose_name="Date et heure de l'avance"
     )
+
 
     # Optionnel : motif ou commentaire
     motif = models.CharField(

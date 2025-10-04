@@ -13,7 +13,9 @@ from personnel.models import Personnel
 class Depense(models.Model):
 
     # La date de la dépense, par défaut aujourd'hui
-    date = models.DateField(default=timezone.now, verbose_name="Date")
+    # date = models.DateField(default=timezone.now, verbose_name="Date")
+    date = models.DateTimeField(default=timezone.now, verbose_name="Date et heure")
+
     
     # La personne qui a pris l'argent
     personnel = models.ForeignKey(Personnel, on_delete=models.CASCADE, verbose_name="Personne")

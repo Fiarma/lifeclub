@@ -2281,3 +2281,681 @@
 </script>
 
 {% endblock %}
+
+
+################# 04 -10- 2025 #################
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Liste des commandes</h2>
+    
+    {# AJOUT DU BOUTON AJOUTER UNE COMMANDE #}
+    <a href="{% url 'commandes:ajouter_commande' %}" class="btn btn-primary btn-lg">
+      <i class="fas fa-plus-circle"></i> Ajouter une commande
+    </a>
+  </div>
+  
+  <hr> 
+  
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="btn-group" role="group" aria-label="Statut des commandes">
+        
+        {% url 'commandes:liste_commandes' as base_url %}
+        
+        {# Lien EN ATTENTE : Actif si statut_filter est 'en_attente' ou si aucun filtre n'est défini #}
+        <a href="{{ base_url }}?statut=en_attente{% if search_term %}&search={{ search_term }}{% endif %}" 
+           class="btn btn-outline-primary {% if statut_filter == 'en_attente' or not statut_filter and not commande_id_recherchee %}active{% endif %}">
+          En attente
+        </a>
+        
+        {# Lien PAYÉES : Actif si statut_filter est 'payer' ou si on recherche un ID d'avoir #}
+        <a href="{{ base_url }}?statut=payer{% if search_term %}&search={{ search_term }}{% endif %}" 
+           class="btn btn-outline-success {% if statut_filter == 'payer' or commande_id_recherchee %}active{% endif %}">
+          Payées
+        </a>
+        
+        {# Lien IMPAYÉES #}
+        <a href="{{ base_url }}?statut=impayee{% if search_term %}&search={{ search_term }}{% endif %}" 
+           class="btn btn-outline-danger {% if statut_filter == 'impayee' %}active{% endif %}">
+          Impayées
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <form method="get" class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Rechercher par ID, date ou nom du personnel..." value="{{ search_term|default_if_none:'' }}">
+        
+        {# Transmettre le statut actif pour maintenir la liste filtrée après la recherche #}
+        {% if statut_filter %}
+          <input type="hidden" name="statut" value="{{ statut_filter }}">
+        {% endif %}
+        {% if commande_id_recherchee %}
+          <input type="hidden" name="id" value="{{ commande_id_recherchee }}">
+        {% endif %}
+        
+        <button class="btn btn-outline-secondary" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="commandes-container">
+    
+    {# AFFICHAGE DES COMMANDES EN ATTENTE #}
+    {% if commandes_en_attente %}
+      {% for commande in commandes_en_attente %}
+      <div class="card mb-3 p-3 shadow-sm commande-card" data-statut="en_attente" data-id="{{ commande.id }}">
+        <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
+        <p>
+            <strong>Date de création :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}
+        </p>
+        <p><strong>Statut :</strong> <span id="statut-{{ commande.id }}">{{ commande.get_statut_display }}</span></p>
+
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Boisson</th>
+              <th>Quantité</th>
+              <th>Montant</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in commande.items.all %}
+            <tr id="item-row-{{ item.id }}">
+              <td class="stock-interaction" 
+                  data-boisson-nom="{{ item.boisson.nom }}"
+                  data-boisson-stock="{{ item.boisson.stock_actuel }}"
+                  data-boisson-id="{{ item.boisson.id }}"
+                  data-item-id="{{ item.id }}">
+                {{ item.boisson.nom }}
+              </td>
+              <td>
+                <button class="btn btn-sm btn-secondary" onclick="updateQuantity({{ item.id }}, 'decrement')">-</button>
+                <span id="item-quantite-{{ item.id }}">{{ item.quantite }}</span>
+                <button class="btn btn-sm btn-secondary" onclick="updateQuantity({{ item.id }}, 'increment')">+</button>
+              </td>
+              <td><span id="item-montant-{{ item.id }}">{{ item.montant_boisson }}</span> F</td>
+              <td>
+                <button class="btn btn-sm btn-danger" onclick="supprimerItem({{ item.id }})">Supprimer</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="row mb-2">
+          <div class="col">
+            <select id="nouvelle-boisson-{{ commande.id }}" class="form-select">
+              <option value="">-- Choisir une boisson --</option>
+              {% for boisson in boissons %}
+              <option value="{{ boisson.id }}" data-stock="{{ boisson.stock_actuel }}" {% if boisson.stock_actuel <= 0 %}disabled{% endif %}>
+                {{ boisson.nom }} - {{ boisson.prix_unitaire }} F {% if boisson.stock_actuel <= 0 %}(ÉPUISÉ){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col">
+            <input type="number" id="quantite-nouvelle-{{ commande.id }}" class="form-control" placeholder="Quantité" min="1">
+          </div>
+          <div class="col">
+            <button class="btn btn-primary" onclick="ajouterBoisson({{ commande.id }})">Ajouter</button>
+          </div>
+        </div>
+
+        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
+
+        <label>Type de paiement :</label>
+        <select id="type-paiement-{{ commande.id }}" class="form-select" onchange="togglePaiementFields({{ commande.id }})">
+          <option value="">-- Choisir --</option>
+          <option value="liquidite">Liquidité</option>
+          <option value="orange_money">Orange Money</option>
+          <option value="hybride">Hybride</option>
+        </select>
+
+        <div id="paiement-fields-{{ commande.id }}" class="mt-2"></div>
+
+        <div class="mt-2">
+          <button class="btn btn-success" onclick="validerCommande({{ commande.id }})">Valider</button>
+          <button class="btn btn-info" onclick="imprimerFacture({{ commande.id }})"><i class="fas fa-print"></i> Imprimer</button>
+          <button class="btn btn-danger" onclick="supprimerCommande({{ commande.id }})">Supprimer la commande</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    {# AFFICHAGE DES COMMANDES PAYÉES #}
+    {% if commandes_payees %}
+      {% for commande in commandes_payees %}
+      <div class="card mb-3 p-3 shadow-sm commande-card" data-statut="payer" data-id="{{ commande.id }}">
+        <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
+        <p>
+            <strong>Date de création :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}
+            {% if commande.date_validation %}
+            <br>
+            <strong>Date de paiement :</strong> {{ commande.date_validation|date:"d/m/Y H:i" }}
+            {% endif %}
+        </p>
+        <p><strong>Statut :</strong> <span id="statut-{{ commande.id }}">{{ commande.get_statut_display }}</span></p>
+
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Boisson</th>
+              <th>Quantité</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in commande.items.all %}
+            <tr>
+              <td>{{ item.boisson.nom }}</td>
+              <td>{{ item.quantite }}</td>
+              <td>{{ item.montant_boisson }} F</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
+
+        <div class="mt-3 p-2 bg-light rounded">
+          <p><strong>Type de paiement :</strong> {{ commande.get_type_paiement_display }}</p>
+          {% if commande.montant_liquidite %}
+          <p><strong>Montant liquidité :</strong> {{ commande.montant_liquidite }} F</p>
+          {% endif %}
+          {% if commande.montant_orange %}
+          <p><strong>Montant Orange Money :</strong> {{ commande.montant_orange }} F</p>
+          {% endif %}
+          {% if commande.montant_restant %}
+          <p><strong>Montant restant :</strong> {{ commande.montant_restant }} F</p>
+          {% endif %}
+          
+          {# AFFICHAGE DE L'AVOIR/MONNAIE RENDUE (AVEC STATUT DE L'OBJET AVOIR) #}
+          {% if commande.monnaie_a_rendre > 0 %}
+              {% if commande.statut_monnaie == 'remis' %}
+              <p class="text-success">
+                  <i class="fas fa-money-bill-alt"></i> 
+                  **Monnaie rendue :** {{ commande.monnaie_a_rendre }} F
+              </p>
+              
+              {% elif commande.statut_monnaie == 'avoir' %}
+                {# Accès au statut via la relation OneToOne 'avoir' #}
+                {% if commande.avoir.statut == 'regle' %}
+                <p class="text-success">
+                    <i class="fas fa-check-circle"></i> 
+                    **Avoir RÉGLÉ :** {{ commande.monnaie_a_rendre }} F
+                    <small>(ID Avoir: {{ commande.avoir.id }})</small>
+                </p>
+                {% else %} 
+                <p class="text-danger">
+                    <i class="fas fa-receipt"></i> 
+                    **Avoir CRÉÉ (En attente) :** {{ commande.monnaie_a_rendre }} F
+                    <small>(ID Avoir: {{ commande.avoir.id }})</small>
+                </p>
+                {% endif %}
+              
+              {% else %}
+              <p><strong>Monnaie à rendre :</strong> {{ commande.monnaie_a_rendre }} F (Statut non applicable/inconnu)</p>
+              {% endif %}
+          {% endif %}
+
+          <button class="btn btn-sm btn-info mt-2" onclick="imprimerFacture({{ commande.id }})"><i class="fas fa-print"></i> Imprimer la facture</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    {# AFFICHAGE DES COMMANDES IMPAYÉES #}
+    {% if commandes_impayees %}
+      {% for commande in commandes_impayees %}
+      <div class="card mb-3 p-3 shadow-sm commande-card" data-statut="impayee" data-id="{{ commande.id }}">
+        <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
+        <p>
+            <strong>Date de création :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}
+            {% if commande.date_validation %}
+            <br>
+            <strong>Date de validation :</strong> {{ commande.date_validation|date:"d/m/Y H:i" }}
+            {% endif %}
+        </p>
+        <p><strong>Statut :</strong> <span id="statut-{{ commande.id }}">{{ commande.get_statut_display }}</span></p>
+
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Boisson</th>
+              <th>Quantité</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in commande.items.all %}
+            <tr>
+              <td>{{ item.boisson.nom }}</td>
+              <td>{{ item.quantite }}</td>
+              <td>{{ item.montant_boisson }} F</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
+
+        <div class="mt-3 p-2 bg-light rounded">
+          {# Afficher "Aucun paiement effectué" si le type de paiement est vide #}
+          <p>
+              <strong>Type de paiement :</strong> 
+              {% if not commande.type_paiement %}
+                  Aucun paiement effectué
+              {% else %}
+                  {{ commande.get_type_paiement_display }}
+              {% endif %}
+          </p>
+          
+          {% if commande.montant_liquidite %}
+          <p><strong>Montant liquidité :</strong> {{ commande.montant_liquidite }} F</p>
+          {% endif %}
+          {% if commande.montant_orange %}
+          <p><strong>Montant Orange Money :</strong> {{ commande.montant_orange }} F</p>
+          {% endif %}
+          {% if commande.montant_restant %}
+          <p><strong>Montant restant :</strong> {{ commande.montant_restant }} F</p>
+          {% endif %}
+          {% if commande.monnaie_a_rendre %}
+          <p><strong>Monnaie à rendre :</strong> {{ commande.monnaie_a_rendre }} F</p>
+          {% endif %}
+          <button class="btn btn-sm btn-info mt-2" onclick="imprimerFacture({{ commande.id }})"><i class="fas fa-print"></i> Imprimer la facture</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    {# MESSAGE SI AUCUNE COMMANDE TROUVÉE #}
+    {% if not commandes_en_attente and not commandes_payees and not commandes_impayees %}
+      <p>Aucune commande trouvée.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div id="stock-display" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 150px;
+    min-height: 100px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    text-align: center;
+">
+    <strong id="stock-boisson-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
+    <span style="font-size: 0.8em; display: block;">Stock Actuel:</span>
+    <span id="stock-boisson-quantite" style="font-size: 2em; font-weight: bold;"></span>
+</div>
+
+<script>
+  
+  // --- Stock Display (inchangé) ---
+  const stockDisplay = document.getElementById('stock-display');
+  const stockNom = document.getElementById('stock-boisson-nom');
+  const stockQuantite = document.getElementById('stock-boisson-quantite');
+
+  function displayStock(nom, stock) {
+      stockNom.textContent = nom;
+      stockQuantite.textContent = stock;
+      stockDisplay.style.display = 'block';
+      const stockInt = parseInt(stock);
+      if (stockInt <= 5 && stockInt > 0) stockDisplay.style.backgroundColor = '#ffc107';
+      else if (stockInt === 0) stockDisplay.style.backgroundColor = '#dc3545';
+      else stockDisplay.style.backgroundColor = '#007bff';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.stock-interaction').forEach(element => {
+          element.addEventListener('mouseenter', function() {
+              displayStock(this.getAttribute('data-boisson-nom'), this.getAttribute('data-boisson-stock'));
+          });
+      });
+  });
+
+  // --- Fonctions AJAX pour la gestion des commandes ---
+
+  function imprimerFacture(commandeId) {
+    const commandeCard = document.querySelector(`.commande-card[data-id="${commandeId}"]`);
+    if (!commandeCard) {
+      alert("Erreur: Commande non trouvée");
+      return;
+    }
+
+    // Récupérer la date de création
+    const dateCreationElement = commandeCard.querySelector('p:nth-child(2) strong');
+    let dateCreationText = '';
+    if (dateCreationElement) {
+        let node = dateCreationElement.nextSibling;
+        while (node && node.nodeType !== 1 && node.textContent.trim() === '') {
+            node = node.nextSibling;
+        }
+        if (node) {
+            dateCreationText = node.textContent.trim();
+        }
+    }
+    
+    // Récupérer la date de paiement/validation si elle existe
+    const dateValidationElement = commandeCard.querySelector('p:nth-child(2) strong:nth-of-type(2)');
+    let datePaiementText = dateCreationText;
+    if (dateValidationElement) {
+        let node = dateValidationElement.nextSibling;
+        while (node && node.nodeType !== 1 && node.textContent.trim() === '') {
+            node = node.nextSibling;
+        }
+        if (node) {
+            datePaiementText = node.textContent.trim();
+        }
+    }
+    
+    const personnelText = commandeCard.querySelector('h5').textContent.split(' - ')[1];
+    const totalText = commandeCard.querySelector('#commande-total-' + commandeId).textContent + ' F';
+
+    const items = [];
+    const rows = commandeCard.querySelectorAll('table tbody tr');
+    
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      const boisson = cells[0].textContent.trim();
+      
+      let quantiteElement = cells[1].querySelector('span');
+      if (!quantiteElement) quantiteElement = cells[1];
+      const quantite = quantiteElement.textContent;
+      
+      let montantElement = cells[2].querySelector('span');
+      if (!montantElement) montantElement = cells[2];
+      const montant = montantElement.textContent.replace(' F', '');
+      
+      const prixUnitaire = (parseFloat(montant) / parseInt(quantite)).toFixed(0);
+      
+      items.push({ boisson, quantite, prixUnitaire, montant });
+    });
+
+    const staticPath = "{% static 'commandes/images/Lifeclub.jpg' %}"; 
+    const logoUrl = window.location.origin + staticPath; 
+
+    const factureContent = `
+      <div style="font-family: Arial, sans-serif; width: 80mm; padding: 10px; margin: 0 auto;">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+          <div style="margin-bottom: 10px;">
+            <img src="${logoUrl}" alt="Lifeclub Logo" style="max-width: 50mm; max-height: 20mm; display: block; margin: 0 auto;">
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+            <h2 style="margin: 0; color: #007bff; font-size: 1.2em; text-align: left;">FACTURE</h2>
+            <strong style="font-size: 1.1em; color: #333;">N° ${commandeId}</strong>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <p style="margin: 5px 0;"><strong>Date de Commande:</strong> ${dateCreationText}</p>
+          <p style="margin: 5px 0;"><strong>Date de Paiement:</strong> ${datePaiementText}</p>
+          <p style="margin: 5px 0;"><strong>Personnel:</strong> ${personnelText}</p>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <th style="text-align: left; padding: 5px; background: #f8f9fa;">Boisson</th>
+              <th style="text-align: center; padding: 5px; background: #f8f9fa;">Qté</th>
+              <th style="text-align: right; padding: 5px; background: #f8f9fa;">Prix U.</th>
+              <th style="text-align: right; padding: 5px; background: #f8f9fa;">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 5px;">${item.boisson}</td>
+                <td style="text-align: center; padding: 5px;">${item.quantite}</td>
+                <td style="text-align: right; padding: 5px;">${item.prixUnitaire} F</td>
+                <td style="text-align: right; padding: 5px;">${item.montant} F</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div style="border-top: 2px solid #000; padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+            <span>TOTAL À PAYER:</span>
+            <span style="color: #007bff;">${totalText}</span>
+          </div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center; color: #666; font-size: 10px;">
+          <p>Merci pour votre commande</p>
+          <p>Émis le: ${new Date().toLocaleDateString('fr-FR')}</p>
+        </div>
+      </div>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Facture Commande #${commandeId}</title>
+        <style>
+          @media print {
+            @page { 
+              margin: 0; 
+              size: 80mm auto;
+            }
+            body { 
+              margin: 0; 
+              padding: 10px;
+              width: 80mm;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+          }
+          body { 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            width: 80mm;
+          }
+        </style>
+      </head>
+      <body>
+        ${factureContent}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            }, 500);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }
+
+  function updateQuantity(itemId, action) {
+    fetch(`/commandes/update-item/${itemId}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
+      body: `action=${action}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const commandeId = data.commande_id;
+        if (data.deleted) { document.getElementById(`item-row-${itemId}`).remove(); } 
+        else {
+          document.getElementById(`item-quantite-${data.item_id}`).innerText = data.quantite;
+          document.getElementById(`item-montant-${data.item_id}`).innerText = data.item_montant;
+        }
+        document.getElementById(`commande-total-${commandeId}`).innerText = data.commande_total;
+        if (data.new_stock !== undefined) {
+            displayStock(data.boisson_nom, data.new_stock);
+            location.reload(); 
+        }
+      } else { alert(data.error || "Erreur lors de la mise à jour : Stock épuisé."); }
+    });
+  }
+
+  function ajouterBoisson(commandeId) {
+    const boissonSelect = document.getElementById(`nouvelle-boisson-${commandeId}`);
+    const boissonId = boissonSelect.value;
+    const quantite = document.getElementById(`quantite-nouvelle-${commandeId}`).value || 1;
+    if (!boissonId) { alert("Veuillez choisir une boisson."); return; }
+    
+    fetch(`/commandes/ajouter-boisson/${commandeId}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
+      body: `boisson_id=${boissonId}&quantite=${quantite}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        if (data.new_stock !== undefined) { displayStock(data.boisson_nom, data.new_stock); }
+        location.reload(); 
+      } else { alert(data.message || "Erreur lors de l'ajout."); }
+    });
+  }
+
+
+  function supprimerItem(itemId) {
+    if (!confirm("Voulez-vous vraiment supprimer cet article ? Cette quantité sera remise en stock.")) return;
+
+    fetch(`/commandes/supprimer-item/${itemId}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById(`item-row-${itemId}`).remove();
+        document.getElementById(`commande-total-${data.commande_id}`).innerText = data.commande_total;
+        if (data.new_stock !== undefined) {
+            displayStock(data.boisson_nom, data.new_stock);
+            location.reload(); 
+        }
+      } else { alert(data.message || "Erreur lors de la suppression."); }
+    });
+  }
+
+  function supprimerCommande(commandeId) {
+    if (!confirm("Voulez-vous vraiment supprimer cette commande ? Si elle est en attente, le stock sera réajusté.")) return;
+
+    fetch(`/commandes/supprimer-commande/${commandeId}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        location.reload();
+      } else { alert(data.message || "Erreur lors de la suppression."); }
+    });
+  }
+
+  function togglePaiementFields(commandeId) {
+    const type = document.getElementById(`type-paiement-${commandeId}`).value;
+    const container = document.getElementById(`paiement-fields-${commandeId}`);
+    const total = parseFloat(document.getElementById(`commande-total-${commandeId}`).innerText);
+    container.innerHTML = "";
+
+    if (type === "liquidite") {
+      container.innerHTML = `
+        <input type="number" id="liquidite-${commandeId}" class="form-control mt-2" placeholder="Montant liquidité" 
+               oninput="checkMonnaie(${commandeId}, ${total})">
+        <div id="monnaie-section-${commandeId}" class="mt-2" style="display:none;">
+          <p><strong>Monnaie :</strong> <span id="monnaie-${commandeId}">0</span> F</p>
+          <label>Status monnaie :</label>
+          <select id="status-monnaie-${commandeId}" class="form-select">
+            <option value="remis">Remis</option>
+            <option value="avoir">Avoir</option>
+          </select>
+        </div>
+      `;
+    } else if (type === "orange_money") {
+      container.innerHTML = `<p><strong>Montant Orange Money :</strong> ${total} F</p>`;
+    } else if (type === "hybride") {
+      container.innerHTML = `
+        <input type="number" id="liquidite-${commandeId}" class="form-control mt-2" placeholder="Montant liquidité"
+               oninput="updateOrangeHybride(${commandeId}, ${total})">
+        <p><strong>Montant Orange Money :</strong> <span id="orange-${commandeId}">${total}</span> F</p>
+      `;
+      updateOrangeHybride(commandeId, total);
+    }
+  }
+
+  function checkMonnaie(commandeId, total) {
+    const montant = parseFloat(document.getElementById(`liquidite-${commandeId}`).value) || 0;
+    const monnaieSection = document.getElementById(`monnaie-section-${commandeId}`);
+    const monnaieField = document.getElementById(`monnaie-${commandeId}`);
+
+    if (montant > total) {
+      monnaieSection.style.display = "block";
+      monnaieField.innerText = (montant - total).toFixed(0);
+    } else {
+      monnaieSection.style.display = "none";
+      monnaieField.innerText = 0;
+    }
+  }
+
+  function updateOrangeHybride(commandeId, total) {
+    const liquidite = parseFloat(document.getElementById(`liquidite-${commandeId}`).value) || 0;
+    const orange = Math.max(total - liquidite, 0);
+    document.getElementById(`orange-${commandeId}`).innerText = orange.toFixed(0);
+  }
+
+  function validerCommande(commandeId) {
+    const type = document.getElementById(`type-paiement-${commandeId}`).value;
+    const montantLiquidite = document.getElementById(`liquidite-${commandeId}`)?.value || 0;
+    const montantOrange = document.getElementById(`orange-${commandeId}`)?.innerText || 0;
+    const statutMonnaie = document.getElementById(`status-monnaie-${commandeId}`)?.value || "";
+
+    // LOGIQUE DE CONFIRMATION (si aucun type de paiement n'est sélectionné)
+    if (!type) {
+      const confirmationMessage = "Aucun paiement sélectionné. La commande sera marquée comme IMPAYÉE. Confirmez-vous cette validation ?";
+      if (!confirm(confirmationMessage)) {
+        return; // Annuler la validation si le caissier dit Non
+      }
+    }
+
+    fetch(`/commandes/valider/${commandeId}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
+      body: `type_paiement=${type}&montant_liquidite=${montantLiquidite}&montant_orange=${montantOrange}&statut_monnaie=${statutMonnaie}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById(`statut-${commandeId}`).innerText = data.statut;
+        const commandeCard = document.querySelector(`[data-id="${commandeId}"]`);
+        commandeCard.setAttribute('data-statut', data.statut_valide ? 'payer' : 'impayee');
+
+        if (data.avoir_cree) { alert(data.message_avoir); }
+        if (!data.statut_valide && data.message_erreur) { alert(data.message_erreur); } 
+
+        setTimeout(() => { location.reload(); }, 1000);
+      }
+    });
+  }
+</script>
+
+{% endblock %}

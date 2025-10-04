@@ -6,6 +6,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Depense
 from .forms import DepenseForm
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from ventes.decorators import session_required # NOUVEAU
 
 # # Liste des dépenses avec possibilité de recherche par date ou par mois
 # def liste_depenses(request):
@@ -81,6 +83,8 @@ def liste_depenses(request):
 
 
 # Ajouter une dépense
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def add_depense(request):
     if request.method == "POST":
         form = DepenseForm(request.POST)
@@ -92,6 +96,8 @@ def add_depense(request):
     return render(request, "depenses/add_depense.html", {"form": form})
 
 # Éditer une dépense existante
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def edit_depense(request, depense_id):
     depense = get_object_or_404(Depense, id=depense_id)
     if request.method == "POST":
@@ -104,6 +110,8 @@ def edit_depense(request, depense_id):
     return render(request, "depenses/edit_depense.html", {"form": form})
 
 # Supprimer une dépense
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def delete_depense(request, depense_id):
     depense = get_object_or_404(Depense, id=depense_id)
     if request.method == "POST":

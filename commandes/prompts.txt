@@ -129,6 +129,28 @@ parler de la presence du personnel.
 Je pense que ce bouton doit-etre un contexte global et ne dependre d'aucun model
 
 
+
+
+c'est super mais je vais te decrire une situation que j'ai remarque qui n'est pas bien.
+
+En fait cette session active doit etre visible dans tous les templates que le caissier doit voir en fonction des droits d'acces qui lui sont accordes (tout ce qui est lie a commande,
+Depenses, avances, presence). Et tant que cette session n'est pas active, il ne peut rien et on doit lever un message pour l'informer qu'il doit d'abord ouvrir afin de pouvoir le faire.
+Parce que j'ai remarque qu'avec la logique actuelle, le caissier peut ajouter une commande valider une commande, donner des avoirs ou des depenses et cela n'est pas enregistrer
+dans le rapport . Pourtant tout doit se faire de l'ouverture a la fermeture pour un controle total et de transparences
+
+quand on clique sur charger l'historique, il faut afficher toute l'historique des rapport et permettre de faire une recherche selon la date de debut sans necessairement mettre 
+l'heure et la minute et s'il arrive  q'on ait plusieurs dates  de debut avec des heures et minutes qi different , on affiche la liste pour cette dates pour un choix.
+
+Si c'est fermer, c'est seulement l'historique qu'on voit
+
+############## Ajout des infos client ###
+
+Pour une transparences et une tracabilite des commande et leur traitement, Il faut integrer dans la commandes des informations client suivants"
+.   Numero de telephone : un champ obligatoire (on doit avoir le zip code deja disponible pour selectionner le pays et par defaut etre sur +226 Burkina Faso)
+.   Nom  et prenom du client (non obligatoire)
+
+
+je veux maintenant que dans la liste des commandes, tu ajoutes a chaque commande et facture les numero de telephone( indicatif + numero), nom et prenoms du client s'ils existent
 ########### Statistiques ############## 
 
 Je veux maintenant faire  des visualisons selon la periode : Journalier, hebdomadaire, mensuel, trimestriel et annuel

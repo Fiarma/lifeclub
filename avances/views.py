@@ -4,6 +4,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Avance
 # Import du formulaire AvanceForm pour créer / éditer des avances
 from .forms import AvanceForm
+from django.contrib.auth.decorators import login_required
+from ventes.decorators import session_required # NOUVEAU
 
 # # Vue listant toutes les avances (triées par date décroissante)
 # def avance_list(request):
@@ -58,6 +60,8 @@ def liste_avances(request):
 
 
 # Vue pour ajouter une nouvelle avance
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def add_avance(request):
     # Si la méthode est POST on traite le formulaire envoyé
     if request.method == "POST":
@@ -76,6 +80,8 @@ def add_avance(request):
     return render(request, "avances/add_avance.html", {"form": form})
 
 # Vue pour éditer une avance existante
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def edit_avance(request, pk):
     # Récupération de l'avance ou 404 si inexistante
     avance = get_object_or_404(Avance, pk=pk)
@@ -96,6 +102,8 @@ def edit_avance(request, pk):
     return render(request, "avances/edit_avance.html", {"form": form})
 
 # Vue pour supprimer une avance (confirmation puis suppression)
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def delete_avance(request, pk):
     # Récupération de l'objet Avance ou 404
     avance = get_object_or_404(Avance, pk=pk)

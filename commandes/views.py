@@ -15,6 +15,9 @@ from .forms import CommandeForm
 from boissons.models import Boisson
 from personnel.models import Personnel
 
+from django.contrib.auth.decorators import login_required
+from ventes.decorators import session_required # NOUVEAU
+
 
 # -----------------------------
 # Vue : liste des commandes
@@ -132,6 +135,8 @@ from django.db import transaction # <-- Assurez-vous d'avoir cet import
 
 # ... (Vos autres imports et modèles)
 
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def ajouter_commande(request):
     boisson_list = Boisson.objects.all()
 
@@ -229,6 +234,8 @@ def ajouter_commande(request):
 # ---------------------------
 @require_POST
 @csrf_exempt
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def supprimer_item(request, item_id):
     item = get_object_or_404(CommandeItem, id=item_id)
     commande = item.commande
@@ -268,6 +275,8 @@ def supprimer_item(request, item_id):
 # ---------------------------
 @require_POST
 @csrf_exempt
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def supprimer_commande(request, commande_id):
     commande = get_object_or_404(Commande, id=commande_id)
 
@@ -301,6 +310,8 @@ def supprimer_commande(request, commande_id):
 
 @require_POST
 @csrf_exempt
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def ajouter_boisson(request, commande_id):
     commande = get_object_or_404(Commande, id=commande_id)
     boisson_id = request.POST.get("boisson_id")
@@ -359,6 +370,8 @@ def ajouter_boisson(request, commande_id):
 # -----------------------------
 @csrf_exempt
 @require_POST
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def update_item_quantity(request, item_id):
     item = get_object_or_404(CommandeItem, pk=item_id)
     boisson = item.boisson # On récupère la boisson associée
@@ -441,6 +454,8 @@ from django.utils import timezone  # <--- NOUVEL IMPORT
 
 @require_POST
 @csrf_exempt
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def valider_commande(request, commande_id):
     # Récupère la commande via son ID
     commande = get_object_or_404(Commande, id=commande_id)
@@ -701,6 +716,8 @@ def liste_avoirs(request):
 
 @require_POST
 @csrf_exempt
+@login_required
+@session_required # <--- APPLICATION DU CONTRÔLE DE SESSION
 def update_avoir_statut(request, avoir_id):
     avoir = get_object_or_404(Avoir, id=avoir_id)
     new_statut = request.POST.get("statut")

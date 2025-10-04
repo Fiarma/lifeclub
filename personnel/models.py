@@ -4,7 +4,10 @@ from django.db import models
 from django.db import models
 from calendar import monthrange
 from datetime import date
+from django.contrib.auth import get_user_model # NOUVEAU
 
+# Récupérer le modèle d'utilisateur actif (généralement django.contrib.auth.models.User)
+User = get_user_model() # NOUVEAU
 # Définition des rôles possibles
 ROLE_CHOICES = [
     ("hotesse", "Hôtesse"),
@@ -36,6 +39,15 @@ JOUR_CHOICES = [
 ]
 
 class Personnel(models.Model):
+
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='personnel_profile'
+    ) # <-- CE CHAMP CORRIGE L'ERREUR FieldError
+
     # Identifiant unique (CNIB ou Passeport)
     id = models.CharField(max_length=20, primary_key=True)
     # Nom et prénom
@@ -91,5 +103,14 @@ class Personnel(models.Model):
             return self.salaire / self.jours_travail
         return 0
 
+    # def __str__(self):
+    #     return f"{self.nom} {self.prenom} ({self.role})"
+
+    # 👇 AJOUTEZ CETTE PROPRIÉTÉ
+    @property
+    def nom_complet(self):
+        """Retourne le nom complet (Prénom Nom)."""
+        return f"{self.prenom} {self.nom}"
+
     def __str__(self):
-        return f"{self.nom} {self.prenom} ({self.role})"
+        return self.nom_complet # Utilise la nouvelle propriété

@@ -68,8 +68,28 @@
       {% for commande in commandes_en_attente %}
       <div class="card mb-3 p-3 shadow-sm commande-card" data-statut="en_attente" data-id="{{ commande.id }}">
         <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
-        <p>
+
+        {# ----------------- AJOUT INFOS CLIENT (En attente) ----------------- #}
+        {% if commande.numero_telephone %}
+        <p class="mb-1 client-info-phone">
+            <strong>Client:</strong> 
+            <a href="tel:{{ commande.code_pays_tel }}{{ commande.numero_telephone }}">
+                {{ commande.code_pays_tel }} {{ commande.numero_telephone }}
+            </a>
+            {% if commande.client_nom or commande.client_prenom %}
+              <small class="client-name-small">
+              ({% with full_name=commande.client_prenom|add:" "|add:commande.client_nom|default:"Nom non spécifié" %}
+                  {{ full_name|striptags }}
+              {% endwith %})
+              </small>
+            {% endif %}
+        </p>
+        {% endif %}
+        {# ----------------- FIN AJOUT INFOS CLIENT ----------------- #}
+
+        <p class="date-creation-p">
             <strong>Date de création :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}
+            {# RETRAIT DE L'AFFICHAGE DE LA DATE DE PAIEMENT/VALIDATION ICI #}
         </p>
         <p><strong>Statut :</strong> <span id="statut-{{ commande.id }}">{{ commande.get_statut_display }}</span></p>
 
@@ -151,11 +171,30 @@
       {% for commande in commandes_payees %}
       <div class="card mb-3 p-3 shadow-sm commande-card" data-statut="payer" data-id="{{ commande.id }}">
         <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
-        <p>
+        
+        {# ----------------- AJOUT INFOS CLIENT (Payées) ----------------- #}
+        {% if commande.numero_telephone %}
+        <p class="mb-1 client-info-phone">
+            <strong>Client:</strong> 
+            <a href="tel:{{ commande.code_pays_tel }}{{ commande.numero_telephone }}">
+                {{ commande.code_pays_tel }} {{ commande.numero_telephone }}
+            </a>
+            {% if commande.client_nom or commande.client_prenom %}
+              <small class="client-name-small">
+              ({% with full_name=commande.client_prenom|add:" "|add:commande.client_nom|default:"Nom non spécifié" %}
+                  {{ full_name|striptags }}
+              {% endwith %})
+              </small>
+            {% endif %}
+        </p>
+        {% endif %}
+        {# ----------------- FIN AJOUT INFOS CLIENT ----------------- #}
+
+        <p class="date-creation-p">
             <strong>Date de création :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}
             {% if commande.date_validation %}
-            <br>
-            <strong>Date de paiement :</strong> {{ commande.date_validation|date:"d/m/Y H:i" }}
+            <br class="date-paiement-br">
+            <strong>Date de paiement :</strong> <span class="date-paiement-span">{{ commande.date_validation|date:"d/m/Y H:i" }}</span>
             {% endif %}
         </p>
         <p><strong>Statut :</strong> <span id="statut-{{ commande.id }}">{{ commande.get_statut_display }}</span></p>
@@ -233,11 +272,30 @@
       {% for commande in commandes_impayees %}
       <div class="card mb-3 p-3 shadow-sm commande-card" data-statut="impayee" data-id="{{ commande.id }}">
         <h5>Commande #{{ commande.id }} - {{ commande.personnel }}</h5>
-        <p>
+
+        {# ----------------- AJOUT INFOS CLIENT (Impayées) ----------------- #}
+        {% if commande.numero_telephone %}
+        <p class="mb-1 client-info-phone">
+            <strong>Client:</strong> 
+            <a href="tel:{{ commande.code_pays_tel }}{{ commande.numero_telephone }}">
+                {{ commande.code_pays_tel }} {{ commande.numero_telephone }}
+            </a>
+            {% if commande.client_nom or commande.client_prenom %}
+              <small class="client-name-small">
+              ({% with full_name=commande.client_prenom|add:" "|add:commande.client_nom|default:"Nom non spécifié" %}
+                  {{ full_name|striptags }}
+              {% endwith %})
+              </small>
+            {% endif %}
+        </p>
+        {% endif %}
+        {# ----------------- FIN AJOUT INFOS CLIENT ----------------- #}
+
+        <p class="date-creation-p">
             <strong>Date de création :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}
             {% if commande.date_validation %}
-            <br>
-            <strong>Date de validation :</strong> {{ commande.date_validation|date:"d/m/Y H:i" }}
+            <br class="date-paiement-br">
+            <strong>Date de validation :</strong> <span class="date-paiement-span">{{ commande.date_validation|date:"d/m/Y H:i" }}</span>
             {% endif %}
         </p>
         <p><strong>Statut :</strong> <span id="statut-{{ commande.id }}">{{ commande.get_statut_display }}</span></p>
@@ -355,33 +413,39 @@
     }
 
     // Récupérer la date de création
-    const dateCreationElement = commandeCard.querySelector('p:nth-child(2) strong');
-    let dateCreationText = '';
-    if (dateCreationElement) {
-        let node = dateCreationElement.nextSibling;
-        while (node && node.nodeType !== 1 && node.textContent.trim() === '') {
-            node = node.nextSibling;
-        }
-        if (node) {
-            dateCreationText = node.textContent.trim();
-        }
-    }
+    const dateCreationElement = commandeCard.querySelector('.date-creation-p');
+    let dateCreationText = dateCreationElement ? dateCreationElement.textContent.trim().split('Date de création :')[1].split('Date de paiement :')[0].split('Date de validation :')[0].trim() : 'N/A';
     
-    // Récupérer la date de paiement/validation si elle existe
-    const dateValidationElement = commandeCard.querySelector('p:nth-child(2) strong:nth-of-type(2)');
-    let datePaiementText = dateCreationText;
-    if (dateValidationElement) {
-        let node = dateValidationElement.nextSibling;
-        while (node && node.nodeType !== 1 && node.textContent.trim() === '') {
-            node = node.nextSibling;
-        }
-        if (node) {
-            datePaiementText = node.textContent.trim();
-        }
-    }
+    // Récupérer la date de paiement/validation (utilise une classe ajoutée)
+    const datePaiementSpan = commandeCard.querySelector('.date-paiement-span');
+    let datePaiementText = datePaiementSpan ? datePaiementSpan.textContent.trim() : dateCreationText;
     
-    const personnelText = commandeCard.querySelector('h5').textContent.split(' - ')[1];
+    // Condition pour l'affichage de la date de paiement dans le reçu
+    let datePaiementHTML = '';
+    // On affiche la date de paiement seulement si elle est différente de la date de création
+    if (datePaiementText !== dateCreationText) {
+        datePaiementHTML = `<p style="margin: 5px 0;"><strong>Date de Paiement:</strong> ${datePaiementText}</p>`;
+    }
+
+
+    // Récupérer le personnel
+    const personnelText = commandeCard.querySelector('h5').textContent.split(' - ')[1].trim();
+    
+    // Récupérer le total
     const totalText = commandeCard.querySelector('#commande-total-' + commandeId).textContent + ' F';
+
+    // Récupérer les informations client
+    const clientPhoneElement = commandeCard.querySelector('.client-info-phone a');
+    const clientNameSmallElement = commandeCard.querySelector('.client-name-small');
+    
+    let phoneText = clientPhoneElement ? clientPhoneElement.textContent.trim() : 'N/A';
+    let clientNameText = clientNameSmallElement ? clientNameSmallElement.textContent.trim().replace(/[()]/g, '') : 'N/A';
+    
+    // S'assurer qu'il y a un nom affiché, même si c'est le numéro
+    if (clientNameText === 'N/A' || clientNameText === 'Nom non spécifié') {
+      clientNameText = phoneText !== 'N/A' ? `Client (${phoneText})` : 'Client Anonyme';
+    }
+
 
     const items = [];
     const rows = commandeCard.querySelectorAll('table tbody tr');
@@ -398,6 +462,7 @@
       if (!montantElement) montantElement = cells[2];
       const montant = montantElement.textContent.replace(' F', '');
       
+      // Assurez-vous que le montant et la quantité sont des nombres pour le calcul
       const prixUnitaire = (parseFloat(montant) / parseInt(quantite)).toFixed(0);
       
       items.push({ boisson, quantite, prixUnitaire, montant });
@@ -420,8 +485,10 @@
         </div>
         
         <div style="margin-bottom: 15px;">
+          <!-- <p style="margin: 5px 0;"><strong>Client:</strong> ${clientNameText}</p> -->
+          <p style="margin: 5px 0;"><strong> Numéro du Client:</strong> ${phoneText}</p>
           <p style="margin: 5px 0;"><strong>Date de Commande:</strong> ${dateCreationText}</p>
-          <p style="margin: 5px 0;"><strong>Date de Paiement:</strong> ${datePaiementText}</p>
+          ${datePaiementHTML} 
           <p style="margin: 5px 0;"><strong>Personnel:</strong> ${personnelText}</p>
         </div>
         
