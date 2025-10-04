@@ -101,3 +101,44 @@ Les details de la vente inclus;
 7. Chiffre d'affaire realise ce jour: c'est la difference entre le montant total de la vente et le montant decaisse
 
 NB: Tous ces calculs sont faits automatiquement et mis a jour automatiquement
+
+On aurait aussi besoin de connaitre les informations sur le personnel afin de donner des primes d'encouragement, qui a le plus vendu ? la quantite de chaque boisson vendu, la quantite totale de toutes les boissons qu'il
+a vendu, quel est le montant des impaye qu'il a en son nom 
+
+
+Super, je pense qu'il faut aussi avoir des informations sur les avaces de salaire de chaque personnel
+
+############# Bouton d'ouverture et de fermeture ####
+
+
+Super, au lieu de definir la date de commencement et de fin, il faut permettre a ce que ca soit personnalisable et dynamique ie qu'on aura 1 bouton de type on/off:
+- Si c'est On ( ie qu'on Ouvre la boite) : et automatiquement le start_time prend la valeur de la date lors du clic. Et des cet instant on peut faire des operations sur les 
+avances, les depenses les commandes, la presences.
+
+- Si c'est Off(fermer): Il faut demander l'avis du caissier s'il veut vraiment fermer, si c'est non, on reste toujours sur On, si c'est Oui, alors ie que le caissier a confirmer
+et le bouton se met a Off. En ce moment, le end_time prend la date de l'instant que le caissier a confirmer la fermeture. Et ainsi le rapport (de la date d'ouverture a la 
+fermeture est archives)
+
+Le bouton, une fois s'il est en mode On, tant que ce n'est pas le caissier lui-meme qui a confirmer en  changeant en Off, il ne doit pas changer meme si le caissier se deconnecte
+et se reconnecte ou meme s'il ya eu un delestage et que la machine soit eteinte automatiquement.
+
+Ce bouton modelise une situation reelle qui est le cas de la boite. Tant qu'on ne l'a pas ouverte, on ne peut pas avoir de commandes, faire de depenses, donner des avances, ni 
+parler de la presence du personnel.
+
+
+Je pense que ce bouton doit-etre un contexte global et ne dependre d'aucun model
+
+
+########### Statistiques ############## 
+
+Je veux maintenant faire  des visualisons selon la periode : Journalier, hebdomadaire, mensuel, trimestriel et annuel
+Ces differents graphiques inclus:
+1.  visualisons du chiffre d'affaire, des depenses et des avances sur salaire. Ici on aura donc 3 variables (Chiffre d'affaire, Depense et Avance sur salaire ) 
+avec des options de cocher plusieurs ie que si on coche chiffre d'affaire seulement, c'est seulement l'evolution du chiffre d'affaire qu'on verra, si on coche chiffre d'affaire
+et depenses , ce sont les 2 courbes d'evolution qu'on vera sur le meme graphiques et si on coche les 3 c'est egalement les 3 qu'on vera, bien attendu on peut decocher aussi
+
+2.  Diagramme en barre pour les quantite des boissons
+
+3.  Diagramme pour visualisons les quantite de chaque boisson vendu par chaque personnel
+
+4.  Diagramme pour visualiser la quantite de toutes les boisson vendu par chaque personnel
