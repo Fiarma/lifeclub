@@ -10,63 +10,6 @@ from django.core.exceptions import ValidationError
 # Import de transaction pour exécuter des opérations atomiques (tout ou rien)
 from django.db import transaction
 
-# # Déclaration du modèle Boisson (fiche principale d'une boisson)
-# class Boisson(models.Model):
-
-#     # Nouveau champ : lieu de vente
-#     LIEU_CHOICES = [
-#         ('boite', 'Boîte'),
-#         ('terrasse', 'Terrasse'),
-#     ]
-#     lieu = models.CharField(
-#         max_length=20, 
-#         choices=LIEU_CHOICES, 
-#         default='boite',
-#         verbose_name="Lieu de vente"
-#     )
-    
-#     # Champ 'nom' : chaîne de caractères, unique pour éviter doublons
-#     nom = models.CharField(max_length=100, unique=True)
-#     # Champ 'prix_unitaire' : prix à 2 décimales (DecimalField pour précision monétaire)
-#     prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
-#     # Champ 'stock_initial' : valeur initiale (définie une seule fois)
-#     stock_initial = models.PositiveIntegerField(default=0)
-#     # Champ 'stock_actuel' : valeur courante du stock
-#     stock_actuel = models.PositiveIntegerField(default=0)
-#     # Champ 'created_at' : date de création automatique
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     # Méthode de représentation texte de l'objet (utilisée par l'admin et le shell)
-#     def __str__(self):
-#         return f"{self.nom} — {self.stock_actuel} unités"
-
-#     # Méthode save personnalisée pour protéger stock_initial après création
-#     def save(self, *args, **kwargs):
-#         # Si l'objet existe déjà (édition), on récupère l'ancien objet
-#         if self.pk:
-#             try:
-#                 # Récupération de l'ancienne instance depuis la base
-#                 ancien = Boisson.objects.get(pk=self.pk)
-#                 # On conserve l'ancienne valeur de stock_initial pour éviter modifications accidentelles
-#                 if ancien.stock_initial is not None:
-#                     self.stock_initial = ancien.stock_initial
-#             except Boisson.DoesNotExist:
-#                 # Si l'objet n'existe plus pour une raison quelconque, on ignore
-#                 pass
-#         # Appel du save parent pour enregistrer l'objet
-#         super().save(*args, **kwargs)
-
-
-# # Import du module models de Django pour définir des modèles
-# from django.db import models
-# # Import de settings pour référencer AUTH_USER_MODEL (utilisateur personnalisé si présent)
-# from django.conf import settings
-# # Import de timezone pour gérer les dates/horaires par défaut
-# from django.utils import timezone
-# # Import de ValidationError pour lancer des erreurs de validation personnalisées
-# from django.core.exceptions import ValidationError
-# # Import de transaction pour exécuter des opérations atomiques (tout ou rien)
-# from django.db import transaction
 
 # Déclaration du modèle Boisson (fiche principale d'une boisson)
 class Boisson(models.Model):

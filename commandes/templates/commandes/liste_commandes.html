@@ -117,7 +117,7 @@
                 <span id="item-quantite-{{ item.id }}">{{ item.quantite }}</span>
                 <button class="btn btn-sm btn-secondary" onclick="updateQuantity({{ item.id }}, 'increment')">+</button>
               </td>
-              <td><span id="item-montant-{{ item.id }}">{{ item.montant_boisson }}</span> F</td>
+              <td><span id="item-montant-{{ item.id }}">{{ item.montant_boisson|floatformat:"-0" }}</span> F</td>
               <td>
                 <button class="btn btn-sm btn-danger" onclick="supprimerItem({{ item.id }})">Supprimer</button>
               </td>
@@ -145,7 +145,7 @@
           </div>
         </div>
 
-        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
+        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total|floatformat:"-0" }}</span> F</p>
 
         <label>Type de paiement :</label>
         <select id="type-paiement-{{ commande.id }}" class="form-select" onchange="togglePaiementFields({{ commande.id }})">
@@ -212,24 +212,24 @@
             <tr>
               <td>{{ item.boisson.nom }}</td>
               <td>{{ item.quantite }}</td>
-              <td>{{ item.montant_boisson }} F</td>
+              <td>{{ item.montant_boisson|floatformat:"-0" }} F</td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
 
-        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
+        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total|floatformat:"-0" }}</span> F</p>
 
         <div class="mt-3 p-2 bg-light rounded">
           <p><strong>Type de paiement :</strong> {{ commande.get_type_paiement_display }}</p>
           {% if commande.montant_liquidite %}
-          <p><strong>Montant liquidité :</strong> {{ commande.montant_liquidite }} F</p>
+          <p><strong>Montant liquidité :</strong> {{ commande.montant_liquidite|floatformat:"-0" }} F</p>
           {% endif %}
           {% if commande.montant_orange %}
-          <p><strong>Montant Orange Money :</strong> {{ commande.montant_orange }} F</p>
+          <p><strong>Montant Orange Money :</strong> {{ commande.montant_orange|floatformat:"-0" }} F</p>
           {% endif %}
           {% if commande.montant_restant %}
-          <p><strong>Montant restant :</strong> {{ commande.montant_restant }} F</p>
+          <p><strong>Montant restant :</strong> {{ commande.montant_restant|floatformat:"-0" }} F</p>
           {% endif %}
           
           {# AFFICHAGE DE L'AVOIR/MONNAIE RENDUE (AVEC STATUT DE L'OBJET AVOIR) #}
@@ -237,7 +237,7 @@
               {% if commande.statut_monnaie == 'remis' %}
               <p class="text-success">
                   <i class="fas fa-money-bill-alt"></i> 
-                  **Monnaie rendue :** {{ commande.monnaie_a_rendre }} F
+                  **Monnaie rendue :** {{ commande.monnaie_a_rendre|floatformat:"-0" }} F
               </p>
               
               {% elif commande.statut_monnaie == 'avoir' %}
@@ -245,19 +245,19 @@
                 {% if commande.avoir.statut == 'regle' %}
                 <p class="text-success">
                     <i class="fas fa-check-circle"></i> 
-                    **Avoir RÉGLÉ :** {{ commande.monnaie_a_rendre }} F
+                    **Avoir RÉGLÉ :** {{ commande.monnaie_a_rendre|floatformat:"-0" }} F
                     <small>(ID Avoir: {{ commande.avoir.id }})</small>
                 </p>
                 {% else %} 
                 <p class="text-danger">
                     <i class="fas fa-receipt"></i> 
-                    **Avoir CRÉÉ (En attente) :** {{ commande.monnaie_a_rendre }} F
+                    **Avoir CRÉÉ (En attente) :** {{ commande.monnaie_a_rendre|floatformat:"-0" }} F
                     <small>(ID Avoir: {{ commande.avoir.id }})</small>
                 </p>
                 {% endif %}
               
               {% else %}
-              <p><strong>Monnaie à rendre :</strong> {{ commande.monnaie_a_rendre }} F (Statut non applicable/inconnu)</p>
+              <p><strong>Monnaie à rendre :</strong> {{ commande.monnaie_a_rendre|floatformat:"-0" }} F (Statut non applicable/inconnu)</p>
               {% endif %}
           {% endif %}
 
@@ -313,13 +313,13 @@
             <tr>
               <td>{{ item.boisson.nom }}</td>
               <td>{{ item.quantite }}</td>
-              <td>{{ item.montant_boisson }} F</td>
+              <td>{{ item.montant_boisson|floatformat:"-0" }} F</td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
 
-        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total }}</span> F</p>
+        <p><strong>Total :</strong> <span id="commande-total-{{ commande.id }}">{{ commande.montant_total|floatformat:"-0" }}</span> F</p>
 
         <div class="mt-3 p-2 bg-light rounded">
           {# Afficher "Aucun paiement effectué" si le type de paiement est vide #}
@@ -333,16 +333,16 @@
           </p>
           
           {% if commande.montant_liquidite %}
-          <p><strong>Montant liquidité :</strong> {{ commande.montant_liquidite }} F</p>
+          <p><strong>Montant liquidité :</strong> {{ commande.montant_liquidite|floatformat:"-0" }} F</p>
           {% endif %}
           {% if commande.montant_orange %}
-          <p><strong>Montant Orange Money :</strong> {{ commande.montant_orange }} F</p>
+          <p><strong>Montant Orange Money :</strong> {{ commande.montant_orange|floatformat:"-0" }} F</p>
           {% endif %}
           {% if commande.montant_restant %}
-          <p><strong>Montant restant :</strong> {{ commande.montant_restant }} F</p>
+          <p><strong>Montant restant :</strong> {{ commande.montant_restant|floatformat:"-0" }} F</p>
           {% endif %}
           {% if commande.monnaie_a_rendre %}
-          <p><strong>Monnaie à rendre :</strong> {{ commande.monnaie_a_rendre }} F</p>
+          <p><strong>Monnaie à rendre :</strong> {{ commande.monnaie_a_rendre|floatformat:"-0" }} F</p>
           {% endif %}
           <button class="btn btn-sm btn-info mt-2" onclick="imprimerFacture({{ commande.id }})"><i class="fas fa-print"></i> Imprimer la facture</button>
         </div>
@@ -432,7 +432,9 @@
     const personnelText = commandeCard.querySelector('h5').textContent.split(' - ')[1].trim();
     
     // Récupérer le total
-    const totalText = commandeCard.querySelector('#commande-total-' + commandeId).textContent + ' F';
+    const totalElement = commandeCard.querySelector('#commande-total-' + commandeId);
+    // UTILISATION DE &nbsp; POUR LE TOTAL
+    const totalText = totalElement ? totalElement.textContent + '&nbsp;F' : 'N/A'; 
 
     // Récupérer les informations client
     const clientPhoneElement = commandeCard.querySelector('.client-info-phone a');
@@ -485,10 +487,9 @@
         </div>
         
         <div style="margin-bottom: 15px;">
-          <!-- <p style="margin: 5px 0;"><strong>Client:</strong> ${clientNameText}</p> -->
-          <p style="margin: 5px 0;"><strong> Numéro du Client:</strong> ${phoneText}</p>
           <p style="margin: 5px 0;"><strong>Date de Commande:</strong> ${dateCreationText}</p>
           ${datePaiementHTML} 
+          <p style="margin: 5px 0;"><strong> Numéro du Client:</strong> ${phoneText}</p>
           <p style="margin: 5px 0;"><strong>Personnel:</strong> ${personnelText}</p>
         </div>
         
@@ -506,9 +507,7 @@
               <tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 5px;">${item.boisson}</td>
                 <td style="text-align: center; padding: 5px;">${item.quantite}</td>
-                <td style="text-align: right; padding: 5px;">${item.prixUnitaire} F</td>
-                <td style="text-align: right; padding: 5px;">${item.montant} F</td>
-              </tr>
+                <td style="text-align: right; padding: 5px;">${item.prixUnitaire}&nbsp;F</td> <td style="text-align: right; padding: 5px;">${item.montant}&nbsp;F</td> </tr>
             `).join('')}
           </tbody>
         </table>
@@ -521,7 +520,7 @@
         </div>
         
         <div style="margin-top: 20px; text-align: center; color: #666; font-size: 10px;">
-          <p>Merci pour votre commande</p>
+          <p>Merci pour votre commande !!!</p>
           <p>Émis le: ${new Date().toLocaleDateString('fr-FR')}</p>
         </div>
       </div>
@@ -584,9 +583,11 @@
         if (data.deleted) { document.getElementById(`item-row-${itemId}`).remove(); } 
         else {
           document.getElementById(`item-quantite-${data.item_id}`).innerText = data.quantite;
-          document.getElementById(`item-montant-${data.item_id}`).innerText = data.item_montant;
+          // Note: Le back-end doit renvoyer un montant entier ou sans décimales inutiles
+          document.getElementById(`item-montant-${data.item_id}`).innerText = data.item_montant; 
         }
-        document.getElementById(`commande-total-${commandeId}`).innerText = data.commande_total;
+        // Note: Le back-end doit renvoyer un montant total entier ou sans décimales inutiles
+        document.getElementById(`commande-total-${commandeId}`).innerText = data.commande_total; 
         if (data.new_stock !== undefined) {
             displayStock(data.boisson_nom, data.new_stock);
             location.reload(); 

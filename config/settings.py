@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',  # Activation
+
 
     # Nos apps
     'boissons',
@@ -68,6 +70,7 @@ INSTALLED_APPS = [
     'comptabilite',
     'users',
     'commandes',
+
 
 ]
 

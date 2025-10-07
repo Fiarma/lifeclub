@@ -153,7 +153,7 @@ Pour une transparences et une tracabilite des commande et leur traitement, Il fa
 je veux maintenant que dans la liste des commandes, tu ajoutes a chaque commande et facture les numero de telephone( indicatif + numero), nom et prenoms du client s'ils existent
 ########### Statistiques ############## 
 
-Je veux maintenant faire  des visualisons selon la periode : Journalier, hebdomadaire, mensuel, trimestriel et annuel
+Je veux maintenant faire dans l'app statistiques  des visualisons selon la periode : Journalier, hebdomadaire, mensuel, trimestriel et annuel
 Ces differents graphiques inclus:
 1.  visualisons du chiffre d'affaire, des depenses et des avances sur salaire. Ici on aura donc 3 variables (Chiffre d'affaire, Depense et Avance sur salaire ) 
 avec des options de cocher plusieurs ie que si on coche chiffre d'affaire seulement, c'est seulement l'evolution du chiffre d'affaire qu'on verra, si on coche chiffre d'affaire
@@ -164,3 +164,63 @@ et depenses , ce sont les 2 courbes d'evolution qu'on vera sur le meme graphique
 3.  Diagramme pour visualisons les quantite de chaque boisson vendu par chaque personnel
 
 4.  Diagramme pour visualiser la quantite de toutes les boisson vendu par chaque personnel
+
+5.  Diagramme pour visualiser le top 10 des clients qui ont le plus consomme ( ie les liens dont les montants de leurs commandes est le plus eleve) sachant que sur chaque 
+commande il ya le numero du client. Donc un client s'il consomme regulierement on peut connaitre son montant  afin de leur offrir des boissons pour les fideliser
+
+
+Super, maitenant je veux donner quelques clarifications sur la periode:
+Si la periode est:
+-   Annuel, on fait directement l'aggregation sur les anneees
+-   Trimestriel, il faut choisir l'annee qu'on veut  parmis la liste des annees qui sont dans la base de donnees
+-   Mensuel, il faut egalement d'abord choisir l'annee
+-   Hebdomadaire, il faut choisir d'abord l'annee egalement
+-   Journalier, il faut choisir la date (jour-mois-annee)
+
+Je ne sais pas si tu me comprends, quand on choisi annee, ce n'est pas pour une seule annnee on veut voir mais toutes les annees, ce qui veut dire que les donnees ont ete aggregees par
+annees .
+
+ C'est la meme chose pour trimestriel et mensuel et hebdomadaire.
+
+ Si la periode est Trimestriel ou Mensuel, il faut afficher automatiquement un champ select avec la liste de toutes les annnees disponible pour permettre de choisir l'annee.
+ Ainsi les donnees sont  aggregees par trimestre ou mois  de l'annee choisi. 
+ Pour trimestriel, on aura donc 4 trimestres car une annee en a 4.
+ Pour mensuel on en aura 12.
+
+ Si la periode est hebdomadaire, il faut automatiquement afficher d'abord le champ annee pour qu'il choississe l'annee puis le champ mois qui est la liste des 12 mois de 
+ l'annee. Donc pour hebdomadaire, ca sera les 4 semaines du mois choisi de l'annee choisie.
+
+ Si la periode est Journalier, il faut automatiquement afficher un champ avex un calendrier pour permettre de choisir la date  
+
+########### 
+C'est bien mais je veux que pour le graphiques en :
+1️⃣ Évolution du Chiffre d'Affaires, Dépenses et Avances: si la periode est Journalier, on fait un Diagramme circulaire du montant total de la vente du jour
+en representant le CA, les Impayer, Depense et Avances
+
+
+
+
+
+ ############
+
+ Ce code marche bien mais maitenant il faut tenir compte de la logique du  start_time et end_time.
+ Les rapports sont automatiquement enregistrer dans la base de donnees a la date du end_time mais ce end_time peut se retrouve hors de la periode  donc c'est 
+ cette logique qu'on va appliquer:
+ 
+ Par exemple:
+ Pour le jour: le start_time peut etre un  exemple le 06-10-2025 15h:12 et le end_time a 07-10-2025 6h:08 pourtant les donnees enregistrer sont pour le jour 06-10-2025 et non 
+ pour le 07-10-2025. Ce qui signifie que l'aggregation se fait en prenant tous les start_time du jour concerne
+
+ Pour la semaine, le dernier start_time pour la semaine peut commencer le dernier jour de la semaine en question et son end_time se trouve dans le premier jour de la semaine 
+ suivante alors que le rapport enregistrer c'est pour la semaine et non la semaine dans laquelle le end_time se trouve.
+ Ce qui veut donc dire que pour la semaine sa sera du premier start_time du lundi( exemple 15 -09-2025 16h37) au dernier start_time du dimanche (21-09-2025 18h:29) meme si son dernier end_time se trouve dans le 
+ lundi de la semaine suivate(22-09-2025 03h:47)
+
+ Pour le mois, ca sera du premier start_time du premier jour du mois (par exemple 01-09-2025 7h:18)  jusqu'au dernier start_time du dernier jour du mois (30-09-2025 14h:23) 
+ meme si son end_time se trouve dans le premier jour du mois suivant (01-10-2025 05h03)  
+
+ Pour le trimestre, ca sera du  premier start_time du premier jour du trimestre concerne (par exemple du 01-01-2025 12h:14 ) au dernier start_time du dernier jour du trimestre
+ conserne (31-03-2025 19h16) meme si son end_time se trouve dans le premier jour du trimestre suivant (par exemple 01-04-2025 2h56)
+
+ Pour l'annee, ca sera du premier start_time du premier jour de l'annee (01-o1-2024 20h30) jusqu'au dernier start_time du 31-12-2024 meme si son dernier end_time se trouve 
+ le 01-01-2025
