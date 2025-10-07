@@ -198,7 +198,17 @@ C'est bien mais je veux que pour le graphiques en :
 en representant le CA, les Impayer, Depense et Avances
 
 
+Pour le nom des mois, ca doit etre en francais.
+Pout la Performance du les Performance personnel, il faut seulement faire le graphiques Performance du Personnel
+Quantité totale vendue par employé
 
+Pour le top 10 des clients, je ne sais pas entre le camabert et le  Diagrammee en barres, lequel est mieux 
+
+Pour le graphique Évolution des Flux Financiers, pour les semaine et trimestres, il faut directement mettre la periode (par exemple 
+15/09/2025 - 21/09/2025)
+
+J'ai remarque que lorsque l'on change de filtre automatiquement, on reviens au graphique de l'Évolution des Flux Financiers, ce qui n'est pas normal car chaque graphique doit etre 
+independant
 
 
  ############

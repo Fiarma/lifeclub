@@ -78,7 +78,7 @@ def statistiques_dashboard(request):
     
     
     # ----------------------------------------------------
-    # FONCTION D'AGRÉGATION (CA / DÉPENSES / AVANCES)
+    # FONCTION D'AGRÉGATION (CA / DÉPENSES / AVANCES / IMPAYÉS)
     # ----------------------------------------------------
     def get_aggregated_data(model, date_field, amount_field, extra_filter={}):
         qs = model.objects.all()
@@ -122,15 +122,30 @@ def statistiques_dashboard(request):
     # 1. ÉVOLUTION DES FLUX FINANCIERS
     # ----------------------------------------------------
 
+    # Récupération des données CA (commandes payées)
     data_ca = get_aggregated_data(Commande, 'date_validation', 'montant_total', extra_filter={'statut': 'payer'})
+    
+    # Récupération des données des impayés
+    data_impayes = get_aggregated_data(Commande, 'date_validation', 'montant_total', extra_filter={'statut': 'impaye'})
+    
+    # Récupération des dépenses
     data_depenses = get_aggregated_data(Depense, 'date', 'montant')
+    
+    # Récupération des avances
     data_avances = get_aggregated_data(Avance, 'date_avance', 'montant')
         
-    all_labels = sorted(list(set(data_ca.keys()) | set(data_depenses.keys()) | set(data_avances.keys())))
+    # Déterminer toutes les labels uniques pour l'axe X
+    all_labels = sorted(list(
+        set(data_ca.keys()) | 
+        set(data_impayes.keys()) | 
+        set(data_depenses.keys()) | 
+        set(data_avances.keys())
+    ))
 
-    # CORRECTION : Utiliser la même structure que l'ancien code qui fonctionnait
+    # Sérialisation dans le contexte
     context['ca_labels'] = json.dumps(all_labels)
     context['ca_data'] = json.dumps([data_ca.get(d, 0) for d in all_labels])
+    context['impayes_data'] = json.dumps([data_impayes.get(d, 0) for d in all_labels])
     context['depenses_data'] = json.dumps([data_depenses.get(d, 0) for d in all_labels])
     context['avances_data'] = json.dumps([data_avances.get(d, 0) for d in all_labels])
 
@@ -196,167 +211,11 @@ def statistiques_dashboard(request):
     context['top_clients_labels'] = json.dumps(top_clients_labels)
     context['top_clients_data'] = json.dumps(top_clients_data)
 
+    # Debug - afficher les données dans la console Django
+    print(f"Période: {period}")
+    print(f"CA total: {sum(data_ca.values())}")
+    print(f"Impayés total: {sum(data_impayes.values())}")
+    print(f"Dépenses total: {sum(data_depenses.values())}")
+    print(f"Avances total: {sum(data_avances.values())}")
+
     return render(request, 'statistiques/dashboard.html', context)
-
-# from django.shortcuts import render
-# from django.db.models import Sum, DecimalField
-# from collections import defaultdict
-# from django.db.models.functions import TruncYear, TruncQuarter, TruncMonth, TruncWeek, TruncDate
-# from commandes.models import Commande, CommandeItem, Boisson
-# from depenses.models import Depense
-# from avances.models import Avance
-# from personnel.models import Personnel
-# from django.utils import timezone
-# from datetime import datetime
-# import calendar
-# import plotly.graph_objs as go
-# from plotly.offline import plot
-
-# def statistiques_dashboard(request):
-#     period = request.GET.get('period', 'mensuel')
-#     selected_year = request.GET.get('year')
-#     selected_month = request.GET.get('month')
-#     selected_date = request.GET.get('date')
-    
-#     today = timezone.localdate()
-#     all_years_qs = Commande.objects.filter(date_validation__isnull=False).values_list('date_validation__year', flat=True).distinct()
-#     available_years = sorted(list(set(all_years_qs)), reverse=True)
-
-#     current_year = int(selected_year) if selected_year else (available_years[0] if available_years else today.year)
-#     current_month = int(selected_month) if selected_month else today.month
-#     current_date = selected_date if selected_date else today.strftime('%Y-%m-%d')
-
-#     # Définition de la fonction d'agrégation selon la période
-#     group_by_func = TruncDate
-#     date_format = '%Y-%m-%d'
-#     base_filter = {}
-
-#     if period == 'annuel':
-#         group_by_func = TruncYear
-#         date_format = '%Y'
-#     elif period == 'trimestriel':
-#         group_by_func = TruncQuarter
-#         date_format = 'T%q/%Y'
-#         base_filter = {'__year': current_year}
-#     elif period == 'mensuel':
-#         group_by_func = TruncMonth
-#         date_format = '%Y-%m'
-#         base_filter = {'__year': current_year}
-#     elif period == 'hebdomadaire':
-#         group_by_func = TruncWeek
-#         date_format = 'Semaine %W'
-#         base_filter = {'__year': current_year, '__month': current_month}
-#     elif period == 'journalier':
-#         group_by_func = TruncDate
-#         try:
-#             date_obj = datetime.strptime(current_date, '%Y-%m-%d').date()
-#             base_filter = {'__date': date_obj}
-#         except ValueError:
-#             pass
-
-#     # Fonction pour récupérer les données agrégées
-#     def get_aggregated_data(model, date_field, amount_field, extra_filter={}):
-#         qs = model.objects.all()
-#         filter_dict = {f'{date_field}{k}': v for k, v in base_filter.items()}
-#         if extra_filter:
-#             qs = qs.filter(**extra_filter)
-#         qs = qs.filter(**filter_dict)
-#         data = defaultdict(lambda: 0)
-#         qs = qs.annotate(date_group=group_by_func(date_field)).values('date_group').annotate(
-#             total=Sum(amount_field)
-#         ).order_by('date_group')
-#         for item in qs:
-#             if item['date_group']:
-#                 if period == 'trimestriel':
-#                     q_num = (item['date_group'].month - 1) // 3 + 1
-#                     label = f"T{q_num}/{item['date_group'].year}"
-#                 elif period == 'hebdomadaire':
-#                     label = item['date_group'].strftime('Semaine %W')
-#                 else:
-#                     label = item['date_group'].strftime(date_format)
-#                 data[label] = float(item['total'])
-#         return data
-
-#     # Récupération des données
-#     data_ca = get_aggregated_data(Commande, 'date_validation', 'montant_total', extra_filter={'statut': 'payer'})
-#     data_depenses = get_aggregated_data(Depense, 'date', 'montant')
-#     data_avances = get_aggregated_data(Avance, 'date_avance', 'montant')
-#     all_labels = sorted(list(set(data_ca.keys()) | set(data_depenses.keys()) | set(data_avances.keys())))
-
-#     # --- Graphique CA / Dépenses / Avances ---
-#     ca_fig = go.Figure()
-#     ca_fig.add_trace(go.Scatter(x=all_labels, y=[data_ca.get(d, 0) for d in all_labels], mode='lines+markers', name='Chiffre d\'Affaires', line=dict(color='#007bff')))
-#     ca_fig.add_trace(go.Scatter(x=all_labels, y=[data_depenses.get(d, 0) for d in all_labels], mode='lines+markers', name='Dépenses', line=dict(color='#dc3545')))
-#     ca_fig.add_trace(go.Scatter(x=all_labels, y=[data_avances.get(d, 0) for d in all_labels], mode='lines+markers', name='Avances', line=dict(color='#ffc107')))
-#     ca_fig.update_layout(title="Évolution CA / Dépenses / Avances", xaxis_title="Période", yaxis_title="Montant (F)")
-
-#     ca_div = plot(ca_fig, output_type='div', include_plotlyjs=False)
-
-#     # --- Graphique Quantité de Boissons ---
-#     items_qs = CommandeItem.objects.filter(commande__statut='payer').select_related('boisson')
-#     boissons_data = items_qs.values('boisson__nom').annotate(total_quantite=Sum('quantite')).order_by('-total_quantite')
-#     boissons_labels = [b['boisson__nom'] for b in boissons_data]
-#     boissons_values = [b['total_quantite'] for b in boissons_data]
-
-#     boissons_fig = go.Figure([go.Bar(x=boissons_labels, y=boissons_values, marker_color='orange')])
-#     boissons_fig.update_layout(title="Quantité de Boissons Vendues", yaxis_title="Quantité")
-#     boissons_div = plot(boissons_fig, output_type='div', include_plotlyjs=False)
-
-#     # --- Graphique Ventes par Personnel et Boisson ---
-#     personnel_sales = defaultdict(lambda: defaultdict(int))
-#     personnel_total = defaultdict(int)
-#     for item in items_qs:
-#         personnel_name = item.commande.personnel.nom_complet if item.commande.personnel else f"ID {item.commande.personnel_id}"
-#         boisson_name = item.boisson.nom
-#         personnel_sales[personnel_name][boisson_name] += item.quantite
-#         personnel_total[personnel_name] += item.quantite
-#     all_boissons = sorted(set(b.nom for b in Boisson.objects.all()))
-#     personnel_names = sorted(personnel_sales.keys())
-
-#     personnel_boisson_fig = go.Figure()
-#     for person in personnel_names:
-#         personnel_boisson_fig.add_trace(go.Bar(
-#             x=all_boissons,
-#             y=[personnel_sales[person].get(b, 0) for b in all_boissons],
-#             name=person
-#         ))
-#     personnel_boisson_fig.update_layout(title="Ventes par Personnel et Boisson", barmode='stack', yaxis_title="Quantité")
-#     personnel_boisson_div = plot(personnel_boisson_fig, output_type='div', include_plotlyjs=False)
-
-#     # --- Graphique Quantité Totale par Personnel ---
-#     personnel_total_fig = go.Figure([go.Bar(y=list(personnel_total.keys()), x=list(personnel_total.values()), orientation='h', marker_color='green')])
-#     personnel_total_fig.update_layout(title="Quantité Totale par Personnel", xaxis_title="Quantité")
-#     personnel_total_div = plot(personnel_total_fig, output_type='div', include_plotlyjs=False)
-
-#     # --- Top Clients ---
-#     top_clients_qs = Commande.objects.filter(numero_telephone__isnull=False, statut='payer').values('numero_telephone', 'client_nom', 'client_prenom').annotate(
-#         total_depense=Sum('montant_total', output_field=DecimalField())
-#     ).order_by('-total_depense')[:10]
-
-#     top_clients_labels = []
-#     top_clients_values = []
-#     for client in top_clients_qs:
-#         full_name = f"{client['client_prenom'] or ''} {client['client_nom'] or ''}".strip()
-#         display = f"{full_name} ({client['numero_telephone']})" if full_name else client['numero_telephone']
-#         top_clients_labels.append(display)
-#         top_clients_values.append(float(client['total_depense']))
-
-#     top_clients_fig = go.Figure([go.Pie(labels=top_clients_labels, values=top_clients_values)])
-#     top_clients_fig.update_layout(title="Top 10 Clients")
-#     top_clients_div = plot(top_clients_fig, output_type='div', include_plotlyjs=False)
-
-#     context = {
-#         'ca_div': ca_div,
-#         'boissons_div': boissons_div,
-#         'personnel_boisson_div': personnel_boisson_div,
-#         'personnel_total_div': personnel_total_div,
-#         'top_clients_div': top_clients_div,
-#         'period': period,
-#         'available_years': available_years,
-#         'selected_year': current_year,
-#         'selected_month': current_month,
-#         'selected_date': current_date,
-#         'months': [(i, calendar.month_name[i]) for i in range(1, 13)],
-#     }
-
-#     return render(request, 'statistiques/dashboard.html', context)

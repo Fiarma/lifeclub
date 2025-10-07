@@ -2,99 +2,175 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4 text-center">📊 Tableau de bord - Statistiques</h2>
-
-    <!-- FILTRE DE PÉRIODE -->
-    <div class="card p-3 mb-4 shadow-sm">
-        <form method="get" class="row g-3 align-items-center">
-            <div class="col-md-3">
-                <label for="period" class="form-label">Période :</label>
-                <select name="period" id="period" class="form-select" onchange="this.form.submit()">
-                    <option value="journalier" {% if period == 'journalier' %}selected{% endif %}>Journalier</option>
-                    <option value="hebdomadaire" {% if period == 'hebdomadaire' %}selected{% endif %}>Hebdomadaire</option>
-                    <option value="mensuel" {% if period == 'mensuel' %}selected{% endif %}>Mensuel</option>
-                    <option value="trimestriel" {% if period == 'trimestriel' %}selected{% endif %}>Trimestriel</option>
-                    <option value="annuel" {% if period == 'annuel' %}selected{% endif %}>Annuel</option>
-                </select>
-            </div>
-
-            {% if available_years %}
-            <div class="col-md-2">
-                <label for="year" class="form-label">Année :</label>
-                <select name="year" id="year" class="form-select" onchange="this.form.submit()">
-                    {% for year in available_years %}
-                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% endif %}
-
-            {% if period == "hebdomadaire" or period == "mensuel" %}
-            <div class="col-md-2">
-                <label for="month" class="form-label">Mois :</label>
-                <select name="month" id="month" class="form-select" onchange="this.form.submit()">
-                    {% for month_number, month_name in months %}
-                        <option value="{{ month_number }}" {% if month_number == selected_month %}selected{% endif %}>{{ month_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% endif %}
-
-            {% if period == "journalier" %}
-            <div class="col-md-3">
-                <label for="date" class="form-label">Date :</label>
-                <input type="date" name="date" id="date" value="{{ selected_date }}" class="form-control" onchange="this.form.submit()">
-            </div>
-            {% endif %}
-        </form>
-    </div>
-
+<div class="container-fluid">
     <div class="row">
-        <!-- 1️⃣ CHIFFRE D'AFFAIRES / DÉPENSES / AVANCES -->
-        <div class="col-md-12 mb-5">
-            <div class="card p-4 shadow-sm">
-                <h4 class="card-title mb-3">1️⃣ Évolution du Chiffre d'Affaires, Dépenses et Avances</h4>
-                <div class="mb-3 d-flex flex-wrap">
-                    <button class="btn btn-sm btn-outline-primary me-2 mb-2" onclick="toggleTrace('ca')">CA</button>
-                    <button class="btn btn-sm btn-outline-danger me-2 mb-2" onclick="toggleTrace('depenses')">Dépenses</button>
-                    <button class="btn btn-sm btn-outline-warning me-2 mb-2" onclick="toggleTrace('avances')">Avances</button>
-                    <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="toggleAllTraces()">Tout Afficher</button>
+        <!-- MENU LATÉRAL -->
+        <div class="col-md-3 col-lg-2 bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <h5 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>📊 Tableau de bord</span>
+                </h5>
+                <ul class="nav flex-column mb-5">
+                    <li class="nav-item">
+                        <a class="nav-link active graph-link" href="#" data-graph="financial">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Flux Financiers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link graph-link" href="#" data-graph="boissons">
+                            <i class="fas fa-wine-bottle me-2"></i>
+                            Ventes Boissons
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link graph-link" href="#" data-graph="personnel">
+                            <i class="fas fa-users me-2"></i>
+                            Performance Personnel
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link graph-link" href="#" data-graph="clients">
+                            <i class="fas fa-user-friends me-2"></i>
+                            Top Clients
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- FILTRES -->
+                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                    <span>⚙️ Filtres</span>
+                </h6>
+                <div class="px-3">
+                    <form method="get" id="filter-form">
+                        <input type="hidden" name="graph" id="current-graph" value="financial">
+                        
+                        <div class="mb-3">
+                            <label for="period" class="form-label small">Période</label>
+                            <select name="period" id="period" class="form-select form-select-sm">
+                                <option value="journalier" {% if period == 'journalier' %}selected{% endif %}>Journalier</option>
+                                <option value="hebdomadaire" {% if period == 'hebdomadaire' %}selected{% endif %}>Hebdomadaire</option>
+                                <option value="mensuel" {% if period == 'mensuel' %}selected{% endif %}>Mensuel</option>
+                                <option value="trimestriel" {% if period == 'trimestriel' %}selected{% endif %}>Trimestriel</option>
+                                <option value="annuel" {% if period == 'annuel' %}selected{% endif %}>Annuel</option>
+                            </select>
+                        </div>
+
+                        {% if available_years %}
+                        <div class="mb-3">
+                            <label for="year" class="form-label small">Année</label>
+                            <select name="year" id="year" class="form-select form-select-sm">
+                                {% for year in available_years %}
+                                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        {% if period == "hebdomadaire" or period == "mensuel" %}
+                        <div class="mb-3">
+                            <label for="month" class="form-label small">Mois</label>
+                            <select name="month" id="month" class="form-select form-select-sm">
+                                {% for month_number, month_name in months %}
+                                    <option value="{{ month_number }}" {% if month_number == selected_month %}selected{% endif %}>
+                                        {{ month_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        {% if period == "journalier" %}
+                        <div class="mb-3">
+                            <label for="date" class="form-label small">Date</label>
+                            <input type="date" name="date" id="date" value="{{ selected_date }}" class="form-control form-control-sm">
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-filter me-1"></i>
+                            Appliquer
+                        </button>
+                    </form>
                 </div>
-                <div id="caChart" style="width:100%; height:400px;"></div>
             </div>
         </div>
 
-        <!-- 2️⃣ QUANTITÉ DE BOISSONS -->
-        <div class="col-md-6 mb-5">
-            <div class="card p-4 shadow-sm">
-                <h4 class="card-title">2️⃣ Quantité de Boissons Vendues</h4>
-                <div id="boissonQuantiteChart" style="width:100%; height:400px;"></div>
+        <!-- CONTENU PRINCIPAL -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h2 id="graph-title" class="h2">Flux Financiers</h2>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportGraph()">
+                        <i class="fas fa-download me-1"></i>
+                        Exporter
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- 3️⃣ VENTES PAR PERSONNEL ET BOISSON -->
-        <div class="col-md-6 mb-5">
-            <div class="card p-4 shadow-sm">
-                <h4 class="card-title">3️⃣ Ventes par Personnel et Boisson</h4>
-                <p class="text-muted small">Chaque couleur représente un employé. Les barres montrent la quantité vendue par boisson.</p>
-                <div id="personnelBoissonChart" style="width:100%; height:400px;"></div>
-            </div>
-        </div>
+            <!-- GRAPHIQUES (un seul affiché à la fois) -->
+            <div id="graph-container">
+                <!-- 1️⃣ FLUX FINANCIERS -->
+                <div id="financial-graph" class="graph-section active">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {% if period == 'journalier' %}
+                                Répartition Financière du Jour ({{ selected_date }})
+                                {% else %}
+                                Évolution des Flux Financiers
+                                {% endif %}
+                            </h5>
+                            
+                            {% if period != 'journalier' %}
+                            <div class="mb-3">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary" onclick="toggleTrace('ca')">CA</button>
+                                    <button class="btn btn-outline-danger" onclick="toggleTrace('impayes')">Impayés</button>
+                                    <button class="btn btn-outline-warning" onclick="toggleTrace('depenses')">Dépenses</button>
+                                    <button class="btn btn-outline-info" onclick="toggleTrace('avances')">Avances</button>
+                                    <button class="btn btn-outline-secondary" onclick="toggleAllTraces()">Tout</button>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div id="caChart" style="width:100%; height:500px;"></div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- 4️⃣ QUANTITÉ TOTALE PAR PERSONNEL -->
-        <div class="col-md-6 mb-5">
-            <div class="card p-4 shadow-sm">
-                <h4 class="card-title">4️⃣ Quantité Totale Vendue par Personnel</h4>
-                <div id="personnelTotalChart" style="width:100%; height:400px;"></div>
-            </div>
-        </div>
+                <!-- 2️⃣ VENTES BOISSONS -->
+                <div id="boissons-graph" class="graph-section">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Quantité de Boissons Vendues</h5>
+                            <p class="text-muted">Top des boissons les plus vendues par quantité</p>
+                            <div id="boissonQuantiteChart" style="width:100%; height:500px;"></div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- 5️⃣ TOP 10 CLIENTS -->
-        <div class="col-md-6 mb-5">
-            <div class="card p-4 shadow-sm">
-                <h4 class="card-title">5️⃣ Top 10 Clients (Montant total dépensé)</h4>
-                <div id="topClientsChart" style="width:100%; height:400px;"></div>
+                <!-- 3️⃣ PERFORMANCE PERSONNEL -->
+                <div id="personnel-graph" class="graph-section">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Performance du Personnel</h5>
+                            <p class="text-muted">Quantité totale vendue par employé</p>
+                            <div id="personnelTotalChart" style="width:100%; height:500px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4️⃣ TOP CLIENTS -->
+                <div id="clients-graph" class="graph-section">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Top 10 Clients</h5>
+                            <p class="text-muted">Clients ayant dépensé le plus (Diagramme en barres)</p>
+                            <div id="topClientsChart" style="width:100%; height:500px;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -102,6 +178,72 @@
 
 <!-- PLOTLY.JS -->
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<!-- FONT AWESOME -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    overflow-y: auto;
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin: 0.125rem 0.5rem;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #e9ecef;
+    color: #007bff;
+}
+
+.sidebar .nav-link.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+.graph-section {
+    display: none;
+}
+
+.graph-section.active {
+    display: block;
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.main-content {
+    margin-left: 280px;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: static;
+        height: auto;
+    }
+    .main-content {
+        margin-left: 0;
+    }
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -109,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const caLabels = JSON.parse('{{ ca_labels|safe }}');
     const caData = {
         ca: JSON.parse('{{ ca_data|safe }}'),
+        impayes: JSON.parse('{{ impayes_data|safe }}'),
         depenses: JSON.parse('{{ depenses_data|safe }}'),
         avances: JSON.parse('{{ avances_data|safe }}')
     };
@@ -121,7 +264,313 @@ document.addEventListener('DOMContentLoaded', function() {
     const topClientsLabels = JSON.parse('{{ top_clients_labels|safe }}');
     const topClientsData = JSON.parse('{{ top_clients_data|safe }}');
 
-    // --- Génération automatique de couleurs distinctes ---
+    // Variables globales
+    let currentGraph = 'financial';
+    let caChartPlotly, boissonChartPlotly, personnelTotalChartPlotly, topClientsChartPlotly;
+
+    // Mettre à jour le champ caché avec le graphique courant
+    document.getElementById('current-graph').value = currentGraph;
+
+    // Navigation entre graphiques
+    document.querySelectorAll('.graph-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Mettre à jour les liens actifs
+            document.querySelectorAll('.graph-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Masquer tous les graphiques
+            document.querySelectorAll('.graph-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Afficher le graphique sélectionné
+            const graphType = this.dataset.graph;
+            const graphSection = document.getElementById(`${graphType}-graph`);
+            graphSection.classList.add('active');
+            
+            // Mettre à jour le titre
+            const titles = {
+                'financial': 'Flux Financiers',
+                'boissons': 'Ventes de Boissons',
+                'personnel': 'Performance du Personnel',
+                'clients': 'Top Clients'
+            };
+            document.getElementById('graph-title').textContent = titles[graphType];
+            
+            // Mettre à jour le graphique courant et le champ caché
+            currentGraph = graphType;
+            document.getElementById('current-graph').value = graphType;
+            
+            // Initialiser le graphique s'il n'est pas déjà initialisé
+            initializeGraph(graphType);
+        });
+    });
+
+    // Gestion de la soumission du formulaire
+    document.getElementById('filter-form').addEventListener('submit', function(e) {
+        // Le graphique courant est déjà dans le champ caché current-graph
+        // Le formulaire se soumet normalement
+    });
+
+    // Initialiser un graphique spécifique
+    function initializeGraph(graphType) {
+        switch(graphType) {
+            case 'financial':
+                if (!caChartPlotly) {
+                    initializeFinancialChart();
+                }
+                break;
+            case 'boissons':
+                if (!boissonChartPlotly) {
+                    initializeBoissonsChart();
+                }
+                break;
+            case 'personnel':
+                if (!personnelTotalChartPlotly) {
+                    initializePersonnelChart();
+                }
+                break;
+            case 'clients':
+                if (!topClientsChartPlotly) {
+                    initializeClientsChart();
+                }
+                break;
+        }
+    }
+
+    // Fonction pour formater les dates en français
+    function formatFrenchDate(dateString) {
+        if (dateString.includes('Semaine')) {
+            // Pour les semaines, on garde le format existant
+            return dateString;
+        } else if (dateString.includes('T')) {
+            // Pour les trimestres, on garde le format existant
+            return dateString;
+        } else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Format journalier : 2024-01-15 -> 15/01/2024
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        } else if (dateString.match(/^\d{4}-\d{2}$/)) {
+            // Format mensuel : 2024-01 -> Janvier 2024
+            const [year, month] = dateString.split('-');
+            const monthNames = [
+                'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+            ];
+            return `${monthNames[parseInt(month) - 1]} ${year}`;
+        } else {
+            return dateString;
+        }
+    }
+
+    // 1️⃣ GRAPHIQUE FINANCIER
+    function initializeFinancialChart() {
+        {% if period == 'journalier' %}
+            // Diagramme circulaire pour période journalière
+            const totalCA = caData.ca.reduce((sum, value) => sum + value, 0);
+            const totalImpayes = caData.impayes.reduce((sum, value) => sum + value, 0);
+            const totalDepenses = caData.depenses.reduce((sum, value) => sum + value, 0);
+            const totalAvances = caData.avances.reduce((sum, value) => sum + value, 0);
+            
+            const caPieData = [{
+                labels: ['Chiffre d\'Affaires', 'Impayés', 'Dépenses', 'Avances'],
+                values: [totalCA, totalImpayes, totalDepenses, totalAvances],
+                type: 'pie',
+                hole: 0.4,
+                marker: {
+                    colors: ['#28a745', '#dc3545', '#ffc107', '#17a2b8']
+                },
+                textinfo: 'label+percent+value',
+                hoverinfo: 'label+percent+value',
+                textposition: 'outside',
+                texttemplate: '%{label}<br>%{value:,.0f} F<br>(%{percent})',
+                hovertemplate: '<b>%{label}</b><br>Montant: %{value:,.0f} F<br>Pourcentage: %{percent}<extra></extra>'
+            }];
+
+            const caPieLayout = {
+                title: { 
+                    text: `Répartition Financière - ${totalCA.toLocaleString()} F CFA`,
+                    font: { size: 16 }
+                },
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    y: -0.2
+                },
+                annotations: [{
+                    text: `Total: ${(totalCA + totalImpayes + totalDepenses + totalAvances).toLocaleString()} F`,
+                    showarrow: false,
+                    font: { size: 14, color: '#333' }
+                }]
+            };
+
+            caChartPlotly = Plotly.newPlot('caChart', caPieData, caPieLayout, { 
+                responsive: true,
+                displayModeBar: true
+            });
+
+        {% else %}
+            // Graphique en ligne pour autres périodes
+            const formattedLabels = caLabels.map(label => formatFrenchDate(label));
+            
+            const caTraces = [
+                {
+                    x: formattedLabels,
+                    y: caData.ca,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: "Chiffre d'Affaires (F)",
+                    line: { color: '#28a745', width: 3 },
+                    marker: { size: 6 },
+                    hovertemplate: '<b>%{x}</b><br>CA: %{y:,.0f} F<extra></extra>'
+                },
+                {
+                    x: formattedLabels,
+                    y: caData.impayes,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: "Impayés (F)",
+                    line: { color: '#dc3545', width: 3 },
+                    marker: { size: 6 },
+                    visible: 'legendonly',
+                    hovertemplate: '<b>%{x}</b><br>Impayés: %{y:,.0f} F<extra></extra>'
+                },
+                {
+                    x: formattedLabels,
+                    y: caData.depenses,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: "Dépenses (F)",
+                    line: { color: '#ffc107', width: 3 },
+                    marker: { size: 6 },
+                    visible: 'legendonly',
+                    hovertemplate: '<b>%{x}</b><br>Dépenses: %{y:,.0f} F<extra></extra>'
+                },
+                {
+                    x: formattedLabels,
+                    y: caData.avances,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: "Avances (F)",
+                    line: { color: '#17a2b8', width: 3 },
+                    marker: { size: 6 },
+                    visible: 'legendonly',
+                    hovertemplate: '<b>%{x}</b><br>Avances: %{y:,.0f} F<extra></extra>'
+                }
+            ];
+
+            const caLayout = {
+                title: { 
+                    text: 'Évolution des Flux Financiers',
+                    font: { size: 16 }
+                },
+                xaxis: { 
+                    title: 'Période',
+                    tickangle: -45
+                },
+                yaxis: { 
+                    title: 'Montant (FCFA)', 
+                    rangemode: 'tozero',
+                    tickformat: ',.0f'
+                },
+                hovermode: 'closest',
+                showlegend: true,
+                legend: { 
+                    orientation: 'h', 
+                    y: -0.3,
+                    x: 0.1
+                },
+                margin: { t: 50, b: 100, l: 80, r: 50 }
+            };
+
+            caChartPlotly = Plotly.newPlot('caChart', caTraces, caLayout, { 
+                responsive: true,
+                displayModeBar: true
+            });
+        {% endif %}
+    }
+
+    // 2️⃣ GRAPHIQUE BOISSONS
+    function initializeBoissonsChart() {
+        const boissonTrace = {
+            x: boissonsData,
+            y: boissonsLabels,
+            type: 'bar',
+            orientation: 'h',
+            marker: {
+                color: generateColors(boissonsLabels.length),
+                line: { color: 'rgba(0,0,0,0.3)', width: 1 }
+            },
+            hovertemplate: '<b>%{y}</b><br>Quantité: %{x}<extra></extra>'
+        };
+
+        const boissonLayout = {
+            title: { text: 'Quantité de Boissons Vendues', font: { size: 16 } },
+            xaxis: { title: 'Quantité' },
+            yaxis: { title: 'Boissons', automargin: true },
+            margin: { l: 150, r: 50, t: 50, b: 50 }
+        };
+
+        boissonChartPlotly = Plotly.newPlot('boissonQuantiteChart', [boissonTrace], boissonLayout, { responsive: true });
+    }
+
+    // 3️⃣ GRAPHIQUE PERFORMANCE PERSONNEL
+    function initializePersonnelChart() {
+        const personnelTotalTrace = {
+            x: personnelTotalData,
+            y: personnelTotalLabels,
+            type: 'bar',
+            orientation: 'h',
+            marker: {
+                color: generateColors(personnelTotalLabels.length),
+                line: { color: 'rgba(0,0,0,0.3)', width: 1 }
+            },
+            hovertemplate: '<b>%{y}</b><br>Quantité: %{x}<extra></extra>'
+        };
+
+        const personnelTotalLayout = {
+            title: { text: 'Performance du Personnel', font: { size: 16 } },
+            xaxis: { title: 'Quantité Vendue' },
+            yaxis: { title: 'Personnel', automargin: true },
+            margin: { l: 150, r: 50, t: 50, b: 50 }
+        };
+
+        personnelTotalChartPlotly = Plotly.newPlot('personnelTotalChart', [personnelTotalTrace], personnelTotalLayout, { responsive: true });
+    }
+
+    // 4️⃣ GRAPHIQUE CLIENTS (Diagramme en barres - plus lisible)
+    function initializeClientsChart() {
+        const topClientsTrace = {
+            x: topClientsData,
+            y: topClientsLabels,
+            type: 'bar',
+            orientation: 'h',
+            marker: {
+                color: '#6f42c1',
+                line: { color: 'rgba(0,0,0,0.3)', width: 1 }
+            },
+            hovertemplate: '<b>%{y}</b><br>Montant: %{x:,.0f} F<extra></extra>'
+        };
+
+        const topClientsLayout = {
+            title: { text: 'Top 10 Clients', font: { size: 16 } },
+            xaxis: { 
+                title: 'Montant Dépensé (FCFA)',
+                tickformat: ',.0f'
+            },
+            yaxis: { 
+                title: 'Clients', 
+                automargin: true 
+            },
+            margin: { l: 200, r: 50, t: 50, b: 50 }
+        };
+
+        topClientsChartPlotly = Plotly.newPlot('topClientsChart', [topClientsTrace], topClientsLayout, { responsive: true });
+    }
+
+    // Fonction de génération de couleurs
     function generateColors(count) {
         const colors = [];
         for (let i = 0; i < count; i++) {
@@ -130,64 +579,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return colors;
     }
 
-    // Variables globales pour les graphiques
-    let caChartPlotly;
-
-    // 1️⃣ Évolution CA / Dépenses / Avances
-    const caTraces = [
-        {
-            x: caLabels,
-            y: caData.ca,
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: "Chiffre d'Affaires (F)",
-            line: { color: '#007bff', width: 3 },
-            marker: { size: 6 }
-        },
-        {
-            x: caLabels,
-            y: caData.depenses,
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: "Dépenses (F)",
-            line: { color: '#dc3545', width: 3 },
-            marker: { size: 6 },
-            visible: 'legendonly'
-        },
-        {
-            x: caLabels,
-            y: caData.avances,
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: "Avances (F)",
-            line: { color: '#ffc107', width: 3 },
-            marker: { size: 6 },
-            visible: 'legendonly'
-        }
-    ];
-
-    const caLayout = {
-        title: { text: 'Évolution des Flux Financiers', font: { size: 16 } },
-        xaxis: { title: 'Période' },
-        yaxis: { title: 'Montant (FCFA)', rangemode: 'tozero' },
-        hovermode: 'closest',
-        showlegend: true,
-        legend: { orientation: 'h', y: -0.2 }
-    };
-
-    caChartPlotly = Plotly.newPlot('caChart', caTraces, caLayout, { responsive: true });
-
-    // Fonctions pour gérer l'affichage des traces
+    // Fonctions pour gérer l'affichage des traces (flux financiers)
     window.toggleTrace = function(traceName) {
         const traces = {
             'ca': 0,
-            'depenses': 1,
-            'avances': 2
+            'impayes': 1,
+            'depenses': 2,
+            'avances': 3
         };
         
         const traceIndex = traces[traceName];
-        if (traceIndex !== undefined) {
-            const currentVisibility = caTraces[traceIndex].visible;
+        if (traceIndex !== undefined && caChartPlotly) {
+            const currentVisibility = caChartPlotly.data[traceIndex].visible;
             const newVisibility = currentVisibility === 'legendonly' ? true : 'legendonly';
             
             Plotly.restyle('caChart', { visible: newVisibility }, [traceIndex]);
@@ -195,101 +598,33 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.toggleAllTraces = function() {
-        Plotly.restyle('caChart', { visible: true }, [0, 1, 2]);
-    };
-
-    // 2️⃣ Quantité de Boissons (Barres horizontales)
-    const boissonTrace = {
-        x: boissonsData,
-        y: boissonsLabels,
-        type: 'bar',
-        orientation: 'h',
-        marker: {
-            color: generateColors(boissonsLabels.length),
-            line: { color: 'rgba(0,0,0,0.3)', width: 1 }
+        if (caChartPlotly) {
+            Plotly.restyle('caChart', { visible: true }, [0, 1, 2, 3]);
         }
     };
 
-    const boissonLayout = {
-        title: { text: 'Quantité de Boissons Vendues', font: { size: 14 } },
-        xaxis: { title: 'Quantité' },
-        yaxis: { title: 'Boissons', automargin: true },
-        margin: { l: 150, r: 50, t: 50, b: 50 }
-    };
-
-    Plotly.newPlot('boissonQuantiteChart', [boissonTrace], boissonLayout, { responsive: true });
-
-    // 3️⃣ Ventes par Personnel et Boisson (Barres groupées)
-    const personnelBoissonTraces = personnelBoissonDatasets.map((dataset, index) => {
-        return {
-            x: personnelBoissonLabels,
-            y: dataset.data,
-            type: 'bar',
-            name: dataset.label,
-            marker: { color: generateColors(personnelBoissonDatasets.length)[index] }
+    // Fonction d'export
+    window.exportGraph = function() {
+        const graphIds = {
+            'financial': 'caChart',
+            'boissons': 'boissonQuantiteChart',
+            'personnel': 'personnelTotalChart',
+            'clients': 'topClientsChart'
         };
-    });
-
-    const personnelBoissonLayout = {
-        title: { text: 'Ventes par Personnel et Boisson', font: { size: 14 } },
-        xaxis: { title: 'Boissons' },
-        yaxis: { title: 'Quantité Vendue', rangemode: 'tozero' },
-        barmode: 'group',
-        showlegend: true,
-        legend: { orientation: 'h', y: -0.2 }
-    };
-
-    Plotly.newPlot('personnelBoissonChart', personnelBoissonTraces, personnelBoissonLayout, { responsive: true });
-
-    // 4️⃣ Quantité Totale Vendue par Personnel (Barres horizontales)
-    const personnelTotalTrace = {
-        x: personnelTotalData,
-        y: personnelTotalLabels,
-        type: 'bar',
-        orientation: 'h',
-        marker: {
-            color: generateColors(personnelTotalLabels.length),
-            line: { color: 'rgba(0,0,0,0.3)', width: 1 }
+        
+        const currentGraphId = graphIds[currentGraph];
+        if (currentGraphId) {
+            Plotly.downloadImage(currentGraphId, {
+                format: 'png',
+                filename: `graphique_${currentGraph}`,
+                width: 1200,
+                height: 600
+            });
         }
     };
 
-    const personnelTotalLayout = {
-        title: { text: 'Quantité Totale par Personnel', font: { size: 14 } },
-        xaxis: { title: 'Quantité' },
-        yaxis: { title: 'Personnel', automargin: true },
-        margin: { l: 150, r: 50, t: 50, b: 50 }
-    };
-
-    Plotly.newPlot('personnelTotalChart', [personnelTotalTrace], personnelTotalLayout, { responsive: true });
-
-    // 5️⃣ Top 10 Clients (Camembert)
-    const topClientsTrace = {
-        labels: topClientsLabels,
-        values: topClientsData,
-        type: 'pie',
-        hole: 0.4,
-        marker: { colors: generateColors(topClientsLabels.length) },
-        textinfo: 'label+percent',
-        hoverinfo: 'label+value+percent',
-        textposition: 'outside'
-    };
-
-    const topClientsLayout = {
-        title: { text: 'Top 10 Clients', font: { size: 14 } },
-        showlegend: true,
-        legend: { orientation: 'v' }
-    };
-
-    Plotly.newPlot('topClientsChart', [topClientsTrace], topClientsLayout, { responsive: true });
-
-    // Redimensionnement responsive
-    window.addEventListener('resize', function() {
-        Plotly.Plots.resize('caChart');
-        Plotly.Plots.resize('boissonQuantiteChart');
-        Plotly.Plots.resize('personnelBoissonChart');
-        Plotly.Plots.resize('personnelTotalChart');
-        Plotly.Plots.resize('topClientsChart');
-    });
+    // Initialiser le premier graphique
+    initializeGraph('financial');
 });
 </script>
-{% endblock %}
+{% endblock %}              
