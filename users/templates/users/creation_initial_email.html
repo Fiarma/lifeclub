@@ -1,0 +1,16 @@
+Bonjour {{ user.profile.prenom }},
+
+Bienvenue au LifeClub ! Votre compte d'employé a été créé.
+
+Vos identifiants de connexion initiaux sont :
+- Nom d'utilisateur (ID) : {{ user.username }}
+- Mot de passe temporaire : Le mot de passe que l'administrateur a défini pour vous.
+
+Par mesure de sécurité, vous devez immédiatement définir votre propre mot de passe personnel en cliquant sur le lien ci-dessous (ou en le copiant dans votre navigateur) :
+
+{{ protocol }}://{{ domain }}{% url 'users:password_reset_confirm' uidb64=uid token=token %}
+
+Une fois que vous aurez défini votre nouveau mot de passe, vous pourrez vous connecter.
+
+Cordialement,
+L'équipe administrative du LifeClub

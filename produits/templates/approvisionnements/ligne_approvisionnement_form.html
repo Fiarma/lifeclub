@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h4 mb-0">{{ title }}</h2>
+        </div>
+        
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>Approvisionnement :</strong> {{ approvisionnement.nom }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Fournisseur :</strong> {{ approvisionnement.fournisseur.nom }}</p>
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Produit -->
+                        <div class="mb-3">
+                            <label for="{{ form.produit.id_for_label }}" class="form-label">
+                                {{ form.produit.label }} *
+                            </label>
+                            {{ form.produit }}
+                            {% if form.produit.errors %}
+                            <div class="text-danger small">{{ form.produit.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Lieu -->
+                        <div class="mb-3">
+                            <label for="{{ form.lieu.id_for_label }}" class="form-label">
+                                {{ form.lieu.label }} *
+                            </label>
+                            {{ form.lieu }}
+                            {% if form.lieu.errors %}
+                            <div class="text-danger small">{{ form.lieu.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <!-- Quantité reçue -->
+                        <div class="mb-3">
+                            <label for="{{ form.quantite_recue.id_for_label }}" class="form-label">
+                                {{ form.quantite_recue.label }} *
+                            </label>
+                            {{ form.quantite_recue }}
+                            {% if form.quantite_recue.errors %}
+                            <div class="text-danger small">{{ form.quantite_recue.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Quantité endommagée -->
+                        <div class="mb-3">
+                            <label for="{{ form.quantite_endommagee.id_for_label }}" class="form-label">
+                                {{ form.quantite_endommagee.label }}
+                            </label>
+                            {{ form.quantite_endommagee }}
+                            {% if form.quantite_endommagee.errors %}
+                            <div class="text-danger small">{{ form.quantite_endommagee.errors }}</div>
+                            {% endif %}
+                            <div class="form-text text-muted">
+                                Doit être inférieure ou égale à la quantité reçue.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <!-- Montant total produit -->
+                        <div class="mb-3">
+                            <label for="{{ form.montant_total_produit.id_for_label }}" class="form-label">
+                                {{ form.montant_total_produit.label }} *
+                            </label>
+                            {{ form.montant_total_produit }}
+                            {% if form.montant_total_produit.errors %}
+                            <div class="text-danger small">{{ form.montant_total_produit.errors }}</div>
+                            {% endif %}
+                            <div class="form-text text-muted">
+                                Montant total facturé pour ce produit.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Informations calculées (lecture seule) -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Informations calculées automatiquement :</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Quantité nette :</strong> 
+                            <span id="quantite_nette_display">{{ ligne.quantite_nette }}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Prix unitaire :</strong> 
+                            <span id="prix_unitaire_display">{{ ligne.prix_achat_unitaire|floatformat:0 }}</span> FCFA
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Montant perte :</strong> 
+                            <span id="montant_perte_display">{{ ligne.montant_perte|floatformat:0 }}</span> FCFA
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'produits:approvisionnement_detail' pk=approvisionnement.pk %}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script pour le calcul en temps réel -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantiteRecueInput = document.getElementById('{{ form.quantite_recue.id_for_label }}');
+    const quantiteEndommageeInput = document.getElementById('{{ form.quantite_endommagee.id_for_label }}');
+    const montantTotalInput = document.getElementById('{{ form.montant_total_produit.id_for_label }}');
+    
+    function formatNumber(number) {
+        return number.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    
+    function updateCalculatedValues() {
+        const quantiteRecue = parseFloat(quantiteRecueInput.value) || 0;
+        const quantiteEndommagee = parseFloat(quantiteEndommageeInput.value) || 0;
+        const montantTotal = parseFloat(montantTotalInput.value) || 0;
+        
+        // Quantité nette
+        const quantiteNette = quantiteRecue - quantiteEndommagee;
+        document.getElementById('quantite_nette_display').textContent = Math.max(0, quantiteNette);
+        
+        // Prix unitaire
+        const prixUnitaire = quantiteRecue > 0 ? montantTotal / quantiteRecue : 0;
+        document.getElementById('prix_unitaire_display').textContent = formatNumber(prixUnitaire);
+        
+        // Montant perte
+        const montantPerte = quantiteEndommagee * prixUnitaire;
+        document.getElementById('montant_perte_display').textContent = formatNumber(montantPerte);
+    }
+    
+    // Écouter les changements
+    [quantiteRecueInput, quantiteEndommageeInput, montantTotalInput].forEach(input => {
+        input.addEventListener('input', updateCalculatedValues);
+    });
+    
+    // Initialiser les valeurs
+    updateCalculatedValues();
+});
+</script>
+
+<style>
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+</style>
+{% endblock %}

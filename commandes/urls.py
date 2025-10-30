@@ -11,7 +11,9 @@ urlpatterns = [
     path("valider/<int:commande_id>/", views.valider_commande, name="valider_commande"),
 
     # Ajouter une boisson à une commande
-    path('ajouter-boisson/<int:commande_id>/', views.ajouter_boisson, name='ajouter_boisson'),
+    #path('ajouter-boisson/<int:commande_id>/', views.ajouter_boisson, name='ajouter_boisson'),
+    path('ajouter-produit/<int:commande_id>/', views.ajouter_produit, name='ajouter_produit'),
+
 
     # Supprimer un item d'une commande
     path('supprimer-item/<int:item_id>/', views.supprimer_item, name='supprimer_item'),

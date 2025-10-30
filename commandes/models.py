@@ -314,6 +314,9 @@
 from django.db import models
 from boissons.models import Boisson
 from personnel.models import Personnel
+from ventes.models import RapportVenteNocturne # <-- AJOUTEZ CET IMPORT
+from produits.models import Produit
+
 
 # Modèle Commande
 class Commande(models.Model):
@@ -359,7 +362,16 @@ class Commande(models.Model):
     )
     
     # ---------------------
-
+# --- Relation au Rapport de Vente Nocturne ---
+    rapport = models.ForeignKey(
+        RapportVenteNocturne, 
+        on_delete=models.SET_NULL, # Meilleur choix pour ne pas supprimer les commandes si un rapport est effacé
+        null=True, 
+        blank=True,
+        related_name="commandes", # Optionnel mais recommandé
+        verbose_name="Rapport de Vente Nocturne"
+    )
+    
     personnel = models.ForeignKey(Personnel, on_delete=models.CASCADE)  # Qui a servi
     date_commande = models.DateTimeField(auto_now_add=True)
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default="en_attente")
@@ -397,17 +409,19 @@ class Commande(models.Model):
 # Boissons dans la commande
 class CommandeItem(models.Model):
     commande = models.ForeignKey(Commande, related_name="items", on_delete=models.CASCADE)
-    boisson = models.ForeignKey(Boisson, on_delete=models.CASCADE)
+    #boisson = models.ForeignKey(Boisson, on_delete=models.CASCADE)
+    produit = models.ForeignKey(Produit, on_delete=models.CASCADE)
+
     quantite = models.PositiveIntegerField()
-    montant_boisson = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+    montant_produit = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
 
     # Calcul automatique du montant de la boisson
     def save(self, *args, **kwargs):
-        self.montant_boisson = self.quantite * self.boisson.prix_unitaire
+        self.montant_produit = self.quantite * self.produit.prix_vente
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.quantite} x {self.boisson.nom}"
+        return f"{self.quantite} x {self.produit.nom}"
 
 
 # Avoir lié à une commande

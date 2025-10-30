@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des Fournisseurs{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h4 mb-0">Gestion des Fournisseurs</h2>
+                <small class="opacity-75">{{ object_list|length }} fournisseur{{ object_list|length|pluralize }}</small>
+            </div>
+            <a href="{% url 'produits:fournisseur_create' %}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Ajouter un Fournisseur
+            </a>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-end">Nom du Fournisseur</th>
+                            <th class="border-end">Contact</th>
+                            <th class="border-end">Adresse</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in object_list %}
+                        <tr>
+                            <!-- Nom -->
+                            <td class="border-end">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px; font-size: 14px; font-weight: bold;">
+                                        {{ f.nom|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ f.nom }}</div>
+                                        {% if f.email %}
+                                        <div class="text-muted small">{{ f.email }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Téléphone -->
+                            <td class="border-end">
+                                {% if f.telephone %}
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-phone text-success me-2"></i>
+                                    <span class="fw-medium">{{ f.telephone }}</span>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Adresse -->
+                            <td class="border-end">
+                                {% if f.adresse %}
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-map-marker-alt text-danger me-2 mt-1"></i>
+                                    <span class="text-muted">{{ f.adresse|truncatechars:50 }}</span>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'produits:fournisseur_update' pk=f.pk %}" 
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Modifier ce fournisseur">
+                                        <i class="fas fa-edit me-1"></i>Modifier
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal"
+                                            data-fournisseur-nom="{{ f.nom }}"
+                                            data-fournisseur-id="{{ f.pk }}"
+                                            title="Supprimer ce fournisseur">
+                                        <i class="fas fa-trash me-1"></i>Supprimer
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-truck fa-3x mb-3"></i>
+                                    <h5 class="fw-bold">Aucun fournisseur enregistré</h5>
+                                    <p class="mb-3">Commencez par ajouter votre premier fournisseur</p>
+                                    <a href="{% url 'produits:fournisseur_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Ajouter un Fournisseur
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pied de tableau avec statistiques -->
+        {% if object_list %}
+        <div class="card-footer bg-light">
+            <div class="row text-center">
+                <div class="col-md-4 border-end">
+                    <small class="text-muted d-block">Total Fournisseurs</small>
+                    <span class="fw-bold text-primary fs-5">{{ object_list|length }}</span>
+                </div>
+                <div class="col-md-4 border-end">
+                    <small class="text-muted d-block">Avec téléphone</small>
+                    <span class="fw-bold text-success fs-5">
+                        {% with object_list|length as total %}
+                        {% with object_list|dictsort:"telephone"|length as with_phone %}
+                        {{ with_phone }}
+                        {% endwith %}
+                        {% endwith %}
+                    </span>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Avec adresse</small>
+                    <span class="fw-bold text-info fs-5">
+                        {% with object_list|length as total %}
+                        {% with object_list|dictsort:"adresse"|length as with_address %}
+                        {{ with_address }}
+                        {% endwith %}
+                        {% endwith %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modale de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmation de suppression
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                    </div>
+                    <h6 class="fw-bold mb-3">Êtes-vous sûr de vouloir supprimer ce fournisseur ?</h6>
+                    <p class="text-muted mb-0" id="fournisseurDetails">
+                        <!-- Les détails du fournisseur seront injectés ici par JavaScript -->
+                    </p>
+                    <div class="alert alert-warning mt-3" role="alert">
+                        <small>
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Attention :</strong> Cette action est irréversible. Toutes les données associées à ce fournisseur seront perdues.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Annuler
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-check me-1"></i>Oui, supprimer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1rem 0.75rem;
+}
+.table td {
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+.card {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+.btn-group .btn {
+    margin: 0 2px;
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+.modal-content {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+.modal-header {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+</style>
+
+<!-- Script pour gérer la modale de suppression -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var deleteModal = document.getElementById('deleteModal');
+    var deleteForm = document.getElementById('deleteForm');
+    
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget; // Bouton qui a déclenché la modale
+        var fournisseurNom = button.getAttribute('data-fournisseur-nom');
+        var fournisseurId = button.getAttribute('data-fournisseur-id');
+        
+        // Mettre à jour le contenu de la modale
+        var fournisseurDetails = document.getElementById('fournisseurDetails');
+        fournisseurDetails.innerHTML = 
+            '<strong class="text-danger fs-5">' + fournisseurNom + '</strong>';
+        
+        // Mettre à jour l'action du formulaire
+        var deleteUrl = "{% url 'produits:fournisseur_delete' pk=0 %}".replace('0', fournisseurId);
+        deleteForm.action = deleteUrl;
+    });
+    
+    // Empêcher la soumission par défaut et gérer manuellement
+    deleteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Soumettre le formulaire via AJAX ou redirection
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Fermer la modale
+                var modal = bootstrap.Modal.getInstance(deleteModal);
+                modal.hide();
+                
+                // Recharger la page pour voir les changements
+                window.location.reload();
+            } else {
+                alert('Erreur lors de la suppression');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression');
+        });
+    });
+    
+    // Animation d'entrée personnalisée
+    deleteModal.addEventListener('shown.bs.modal', function () {
+        var modalContent = this.querySelector('.modal-content');
+        modalContent.style.transform = 'scale(1)';
+        modalContent.style.opacity = '1';
+    });
+    
+    deleteModal.addEventListener('hide.bs.modal', function () {
+        var modalContent = this.querySelector('.modal-content');
+        modalContent.style.transform = 'scale(0.8)';
+        modalContent.style.opacity = '0';
+    });
+});
+</script>
+{% endblock %}

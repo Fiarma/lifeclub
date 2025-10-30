@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer {{ product.nom }}{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-xl rounded-xl p-6 max-w-xl mx-auto text-center">
+    <h1 class="text-3xl font-extrabold text-red-700 mb-4">
+        Confirmation de Suppression
+    </h1>
+    
+    <p class="text-lg text-gray-700 mb-6">
+        Êtes-vous sûr de vouloir supprimer le produit : 
+        <span class="font-bold text-gray-900">"{{ product.nom }}"</span> ?
+    </p>
+    
+    <p class="text-sm text-red-500 mb-8">
+        Cette action est irréversible et pourrait affecter les enregistrements d'inventaire passés.
+    </p>
+
+    <form method="POST" action="{% url 'produits:product_delete' product.pk %}" class="flex justify-center space-x-6">
+        {% csrf_token %}
+        <a href="{% url 'produits:product_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-medium transition shadow-md">
+            Annuler
+        </a>
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold transition shadow-lg">
+            Oui, Supprimer Définitivement
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connexion au {{ site_name }}</title>
+</head>
+<body>
+    <p>Bonjour {{ user.personnel_profile.prenom }},</p>
+
+    <p>Félicitations ! Votre nouveau mot de passe a été défini avec succès. Votre compte est maintenant **actif et débloqué**.</p>
+
+    <p>Vous pouvez vous connecter à votre espace employé en utilisant votre identifiant (ID) et votre nouveau mot de passe :</p>
+    
+    <ul>
+        <li><strong>Identifiant (ID) :</strong> {{ user.username }}</li>
+    </ul>
+
+    <p style="margin-top: 20px;">
+        <a href="{{ login_url }}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Cliquez ici pour vous connecter
+        </a>
+    </p>
+
+    <p>Cordialement,</p>
+    <p>L'équipe administrative du {{ site_name }}</p>
+</body>
+</html>

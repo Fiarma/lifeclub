@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h4 mb-0">{{ title }}</h2>
+        </div>
+        <div class="card-body">
+            {% if approvisionnement and approvisionnement.statut == 'valide' %}
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Attention!
+                    </h4>
+                    <p class="mb-0">Cet approvisionnement est <strong>validé</strong> et ne peut plus être modifié.</p>
+                </div>
+            {% else %}
+                {% if approvisionnement %}
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>Alerte
+                    </h4>
+                    <p class="mb-0"><strong>ATTENTION :</strong> La validation mettra à jour le stock et bloquera toute modification.</p>
+                </div>
+                {% endif %}
+
+                <form method="post" id="appro_form">
+                    {% csrf_token %}
+                    
+                    <!-- Section Informations Générales -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h3 class="h5 mb-0">
+                                <i class="fas fa-info-circle me-2 text-primary"></i>
+                                Informations Générales et Coûts
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.nom.id_for_label }}" class="form-label fw-semibold">
+                                        {{ form.nom.label }}
+                                        {% if form.nom.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.nom }}
+                                    {% if form.nom.errors %}
+                                    <div class="text-danger small mt-1">{{ form.nom.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.date_approvisionnement.id_for_label }}" class="form-label fw-semibold">
+                                        {{ form.date_approvisionnement.label }}
+                                        {% if form.date_approvisionnement.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.date_approvisionnement }}
+                                    {% if form.date_approvisionnement.errors %}
+                                    <div class="text-danger small mt-1">{{ form.date_approvisionnement.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.fournisseur.id_for_label }}" class="form-label fw-semibold">
+                                        {{ form.fournisseur.label }}
+                                        {% if form.fournisseur.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.fournisseur }}
+                                    {% if form.fournisseur.errors %}
+                                    <div class="text-danger small mt-1">{{ form.fournisseur.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.cout_transport.id_for_label }}" class="form-label fw-semibold">
+                                        {{ form.cout_transport.label }}
+                                        {% if form.cout_transport.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.cout_transport }}
+                                    {% if form.cout_transport.errors %}
+                                    <div class="text-danger small mt-1">{{ form.cout_transport.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section Produits -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h3 class="h5 mb-0">
+                                <i class="fas fa-boxes me-2 text-primary"></i>
+                                Détails des Produits Reçus
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            {{ ligne_formset.management_form }}
+                            
+                            <!-- Stocker les options des produits depuis la première ligne existante -->
+                            <div id="produit-options" style="display: none;">
+                                {% if ligne_formset.forms.0 %}
+                                    {{ ligne_formset.forms.0.produit.field.widget.render }}
+                                {% endif %}
+                            </div>
+                            
+                            <div id="formset-container">
+                                {% for form in ligne_formset %}
+                                    <div class="formset-row card mb-3 {% if form.instance.pk %}border-primary{% else %}border-secondary{% endif %}">
+                                        <div class="card-body">
+                                            <div class="row g-3 align-items-end">
+                                                <div class="col-md-2">
+                                                    <label class="form-label fw-semibold small">Produit</label>
+                                                    {{ form.produit }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label fw-semibold small">Lieu</label>
+                                                    {{ form.lieu }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label fw-semibold small">Qté Reçue</label>
+                                                    {{ form.quantite_recue }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label fw-semibold small">Qté Endommagée</label>
+                                                    {{ form.quantite_endommagee }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label fw-semibold small">Montant Total</label>
+                                                    {{ form.montant_total_produit }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    {% if form.instance.pk %}
+                                                        <div class="form-check mt-2">
+                                                            {{ form.DELETE }}
+                                                            <label class="form-check-label small text-danger" for="{{ form.DELETE.id_for_label }}">
+                                                                Supprimer
+                                                            </label>
+                                                        </div>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-sm btn-outline-danger remove-formset-row mt-2">
+                                                            <i class="fas fa-trash me-1"></i>Supprimer
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% for hidden in form.hidden_fields %}
+                                                {{ hidden }}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <button type="button" id="add-more" class="btn btn-outline-primary mt-3">
+                                <i class="fas fa-plus me-2"></i>Ajouter un Produit
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                        <a href="{% url 'produits:approvisionnement_list' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Sauvegarder
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript avec chargement des options de produits -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DÉBUT DU SCRIPT ===');
+    
+    const addButton = document.getElementById('add-more');
+    const container = document.getElementById('formset-container');
+    
+    console.log('Bouton trouvé:', addButton);
+    console.log('Container trouvé:', container);
+    
+    // TROUVER AUTOMATIQUEMENT le management form
+    let totalForms = null;
+    const possibleIds = [
+        'id_ligneapprovisionnement_set-TOTAL_FORMS',
+        'id_form-TOTAL_FORMS', 
+        'id_ligne-TOTAL_FORMS',
+        'id_formset-TOTAL_FORMS'
+    ];
+    
+    for (const id of possibleIds) {
+        totalForms = document.getElementById(id);
+        if (totalForms) {
+            console.log('✅ Management form trouvé avec ID:', id);
+            break;
+        }
+    }
+    
+    if (!totalForms) {
+        // Si on ne trouve pas par ID, chercher par name
+        console.log('🔍 Recherche par name...');
+        const inputs = document.querySelectorAll('input[name*="TOTAL_FORMS"]');
+        if (inputs.length > 0) {
+            totalForms = inputs[0];
+            console.log('✅ Management form trouvé par name:', totalForms.name);
+        }
+    }
+    
+    if (!totalForms) {
+        console.log('❌ Aucun management form trouvé.');
+    } else {
+        console.log('✅ Total forms:', totalForms.value);
+    }
+    
+    // Fonction pour trouver le préfixe automatiquement
+    function findPrefix() {
+        if (container.children.length > 0) {
+            const firstInput = container.querySelector('input, select');
+            if (firstInput && firstInput.name) {
+                const match = firstInput.name.match(/^(.+?)-\d+-/);
+                if (match) {
+                    return match[1];
+                }
+            }
+        }
+        return 'ligneapprovisionnement_set'; // Valeur par défaut
+    }
+    
+    const prefix = findPrefix();
+    console.log('🔍 Préfixe détecté:', prefix);
+    
+    // Récupérer les options de produits depuis les lignes existantes
+    function getProduitOptions() {
+        const firstProduitSelect = container.querySelector('select[name*="-produit"]');
+        if (firstProduitSelect) {
+            return firstProduitSelect.innerHTML;
+        }
+        
+        // Fallback: options par défaut
+        return `
+            <option value="">---------</option>
+            {% for produit in ligne_formset.forms.0.produit.field.queryset %}
+                <option value="{{ produit.pk }}">{{ produit.nom }}</option>
+            {% endfor %}
+        `;
+    }
+    
+    const produitOptions = getProduitOptions();
+    console.log('📦 Options produits récupérées');
+    
+    // Fonction pour créer une nouvelle ligne
+    function createEmptyForm(index) {
+        return `
+            <div class="formset-row card mb-3 border-success">
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold small">Produit</label>
+                            <select name="${prefix}-${index}-produit" class="form-select" required>
+                                ${produitOptions}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold small">Lieu</label>
+                            <select name="${prefix}-${index}-lieu" class="form-select" required>
+                                <option value="">---------</option>
+                                <option value="boite">Boîte</option>
+                                <option value="terrasse">Terrasse</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold small">Qté Reçue</label>
+                            <input type="number" name="${prefix}-${index}-quantite_recue" class="form-control" value="0" min="0" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold small">Qté Endommagée</label>
+                            <input type="number" name="${prefix}-${index}-quantite_endommagee" class="form-control" value="0" min="0" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold small">Montant Total</label>
+                            <input type="number" name="${prefix}-${index}-montant_total_produit" class="form-control" step="0.01" value="0" min="0" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-formset-row mt-2">
+                                <i class="fas fa-trash me-1"></i>Supprimer
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="${prefix}-${index}-id">
+                    <input type="hidden" name="${prefix}-${index}-approvisionnement">
+                </div>
+            </div>
+        `;
+    }
+    
+    // Gestion de l'ajout
+    addButton.addEventListener('click', function() {
+        console.log('🎯 BOUTON CLIQUE !');
+        
+        if (!totalForms) {
+            console.log('❌ Impossible de trouver le management form');
+            alert('Erreur: management form non trouvé');
+            return;
+        }
+        
+        const currentTotal = parseInt(totalForms.value);
+        console.log('📊 Ajout ligne n°:', currentTotal);
+        
+        // Créer et ajouter la nouvelle ligne
+        const newRow = document.createElement('div');
+        newRow.innerHTML = createEmptyForm(currentTotal);
+        container.appendChild(newRow);
+        
+        // Mettre à jour le compteur
+        totalForms.value = currentTotal + 1;
+        console.log('✅ Nouveau total:', totalForms.value);
+        console.log('✅ Nouvelle ligne ajoutée avec succès !');
+        
+        // Vérifier que les options sont bien chargées
+        const newProduitSelect = newRow.querySelector('select[name*="-produit"]');
+        console.log('🔍 Nouveau select produit:', newProduitSelect);
+        console.log('📦 Nombre d\'options:', newProduitSelect ? newProduitSelect.options.length : 0);
+    });
+    
+    // Gestion de la suppression
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-formset-row') || 
+            e.target.closest('.remove-formset-row')) {
+            e.preventDefault();
+            const button = e.target.classList.contains('remove-formset-row') ? e.target : e.target.closest('.remove-formset-row');
+            const row = button.closest('.formset-row');
+            
+            console.log('🗑️ Suppression ligne');
+            row.remove();
+            
+            // Mettre à jour le compteur si disponible
+            if (totalForms) {
+                const forms = container.querySelectorAll('.formset-row');
+                totalForms.value = forms.length;
+                console.log('📊 Nouveau total après suppression:', totalForms.value);
+            }
+        }
+    });
+    
+    console.log('=== FIN INITIALISATION ===');
+});
+</script>
+
+<!-- Solution alternative si le JavaScript ne charge pas les options -->
+<script>
+// Récupérer dynamiquement les produits via AJAX si nécessaire
+function loadProduitsViaAjax() {
+    // Cette fonction peut être utilisée si les options ne se chargent pas
+    console.log('Chargement des produits via AJAX...');
+    // Implémentation AJAX optionnelle
+}
+</script>
+{% endblock %}

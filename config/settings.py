@@ -19,6 +19,20 @@ from dotenv import load_dotenv # <-- Import pour charger le fichier .env
 # Charge les variables d'environnement du fichier .env
 load_dotenv() 
 
+
+from django.contrib.messages import constants as messages
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',
+}
+
+
 # ...
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,7 +54,8 @@ ALLOWED_HOSTS = ['*']
 
 #Cette partie est dediee a jl'ajout des  liens ngrok pour la recurite des formulaire
 CSRF_TRUSTED_ORIGINS = [
-    'https://a40b641da22b.ngrok-free.app'
+    'https://a40b641da22b.ngrok-free.app',
+    'https://04db87f69fa7.ngrok-free.app'
 ]
 # Redirection quand @login_required bloque l'accès
 #LOGIN_URL = '/'  # par défaut redirige vers la page principale
@@ -70,6 +85,8 @@ INSTALLED_APPS = [
     'comptabilite',
     'users',
     'commandes',
+    'produits',
+
 
 
 ]
@@ -105,6 +122,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+
+# URL vers laquelle Django redirige l'utilisateur après une connexion réussie
+LOGIN_REDIRECT_URL = 'personnel:home_employe' 
 
 
 # Database
@@ -153,7 +173,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+#LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-fr'
 
 TIME_ZONE = 'UTC'
 
@@ -190,3 +211,40 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+
+# config/settings.py
+
+# Importez la fonction config de decouple en haut du fichier
+from decouple import config 
+# ... (votre code d'imports existant)
+
+# ... (Votre définition de SECRET_KEY doit aussi utiliser config)
+# SECRET_KEY = config('SECRET_KEY') 
+
+# ... (le reste de vos settings)
+
+# --- 1. Configuration du Backend d'Envoi (SMTP) ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# --- 2. Hôte et Port (Lecture depuis .env) ---
+# Utilisez config() pour lire les valeurs du fichier .env
+EMAIL_HOST = config('EMAIL_HOST') 
+
+# 'cast=int' convertit la chaîne '587' en nombre entier
+EMAIL_PORT = config('EMAIL_PORT', cast=int) 
+
+# 'cast=bool' convertit la chaîne 'True' en booléen True
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool) 
+# EMAIL_USE_SSL est généralement laissé à False lorsque EMAIL_USE_TLS est à True avec le port 587
+
+# --- 3. Identifiants de Connexion (Lecture depuis .env) ---
+EMAIL_HOST_USER = config('EMAIL_HOST_USER') 
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD') 
+
+# --- 4. Adresses d'Expédition par Défaut ---
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER 
+SERVER_EMAIL = EMAIL_HOST_USER
+
+# --- 5. Configuration Nécessaire pour les Liens (Réinitialisation) ---
+SITE_ID = 1

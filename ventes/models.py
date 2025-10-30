@@ -155,12 +155,65 @@ from boissons.models import Boisson
 from personnel.models import Personnel
 
 
+# class RapportVenteNocturne(models.Model):
+#     """
+#     Stocke le résumé financier global d'une nuit de vente complète.
+#     """
+#     start_time = models.DateTimeField(verbose_name="Début de la période de vente", unique=True)
+#     # end_time est optionnel tant que le rapport est actif
+#     end_time = models.DateTimeField(verbose_name="Fin de la période de vente", null=True, blank=True)
+    
+#     # GESTION DE SESSION : État de la session (Ouvert/Fermé)
+#     is_active = models.BooleanField(
+#         default=False,
+#         verbose_name="Session de Vente Active"
+#     )
+#     # GESTION DE SESSION : Caissier responsable de l'ouverture
+#     caissier = models.ForeignKey(
+#         Personnel,
+#         on_delete=models.PROTECT,
+#         null=True,
+#         blank=True,
+#         verbose_name="Caissier Responsable de la Session"
+#     )
+
+#     # Montants agrégés du rapport financier
+#     montant_total_vente = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+#     montant_total_impayees = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+#     montant_total_depenses = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+#     montant_total_avances = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+#     montant_decaisse = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+#     chiffre_affaire = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    
+#     date_enregistrement = models.DateTimeField(default=timezone.now)
+
+#     def __str__(self):
+#         status = "EN COURS 🟢" if self.is_active else "TERMINÉ 🔴"
+#         return f"Rapport Vente du {self.start_time.strftime('%d/%m/%Y %H:%M')} ({status})"
+
+#     class Meta:
+#         ordering = ['-start_time']
+#         verbose_name = "Rapport de Vente Nocturne"
+#         verbose_name_plural = "Rapports de Vente Nocturne"
+#         # Contrainte pour garantir qu'un seul rapport peut être actif à la fois
+#         constraints = [
+#             UniqueConstraint(fields=['is_active'], condition=Q(is_active=True), name='unique_active_session')
+#         ]
+
+
+
+############
+
+# Importations des modèles externes
+from produits.models import Produit
+from personnel.models import Personnel
+
+
 class RapportVenteNocturne(models.Model):
     """
     Stocke le résumé financier global d'une nuit de vente complète.
     """
     start_time = models.DateTimeField(verbose_name="Début de la période de vente", unique=True)
-    # end_time est optionnel tant que le rapport est actif
     end_time = models.DateTimeField(verbose_name="Fin de la période de vente", null=True, blank=True)
     
     # GESTION DE SESSION : État de la session (Ouvert/Fermé)
@@ -177,13 +230,61 @@ class RapportVenteNocturne(models.Model):
         verbose_name="Caissier Responsable de la Session"
     )
 
-    # Montants agrégés du rapport financier
-    montant_total_vente = models.DecimalField(max_digits=10, decimal_places=0, default=0)
-    montant_total_impayees = models.DecimalField(max_digits=10, decimal_places=0, default=0)
-    montant_total_depenses = models.DecimalField(max_digits=10, decimal_places=0, default=0)
-    montant_total_avances = models.DecimalField(max_digits=10, decimal_places=0, default=0)
-    montant_decaisse = models.DecimalField(max_digits=10, decimal_places=0, default=0)
-    chiffre_affaire = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    # =========================================================================
+    # NOUVELLE TERMINOLOGIE FINANCIÈRE CORRIGÉE
+    # =========================================================================
+    
+    # CHIFFRE D'AFFAIRE : Total des ventes (anciennement montant_total_vente)
+    chiffre_affaire = models.DecimalField(
+        max_digits=10, 
+        decimal_places=0, 
+        default=0,
+        verbose_name="Chiffre d'Affaire Total"
+    )
+    
+    # MARGE TOTALE : Somme des marges de tous les produits vendus
+    marge_totale = models.DecimalField(
+        max_digits=10, 
+        decimal_places=0, 
+        default=0,
+        verbose_name="Marge Totale Réalisée"
+    )
+    
+    # DÉCAISSEMENTS
+    montant_total_impayees = models.DecimalField(
+        max_digits=10, 
+        decimal_places=0, 
+        default=0,
+        verbose_name="Total des Impayés"
+    )
+    montant_total_depenses = models.DecimalField(
+        max_digits=10, 
+        decimal_places=0, 
+        default=0,
+        verbose_name="Total des Dépenses"
+    )
+    montant_total_avances = models.DecimalField(
+        max_digits=10, 
+        decimal_places=0, 
+        default=0,
+        verbose_name="Total des Avances"
+    )
+    
+    # NOUVEAU : Montant décaissé = Dépenses + Avances (sans les impayés)
+    montant_decaisse = models.DecimalField(
+        max_digits=10, 
+        decimal_places=0, 
+        default=0,
+        verbose_name="Total Décaissé (Dépenses + Avances)"
+    )
+    
+    # BÉNÉFICE NET : Marge Totale - Dépenses (anciennement chiffre_affaire)
+    benefice_net = models.DecimalField(
+        max_digits=10, 
+        decimal_places=0, 
+        default=0,
+        verbose_name="Bénéfice Net (Marge - Dépenses)"
+    )
     
     date_enregistrement = models.DateTimeField(default=timezone.now)
 
@@ -195,12 +296,138 @@ class RapportVenteNocturne(models.Model):
         ordering = ['-start_time']
         verbose_name = "Rapport de Vente Nocturne"
         verbose_name_plural = "Rapports de Vente Nocturne"
-        # Contrainte pour garantir qu'un seul rapport peut être actif à la fois
         constraints = [
             UniqueConstraint(fields=['is_active'], condition=Q(is_active=True), name='unique_active_session')
         ]
 
 
+class DetailVenteProduit(models.Model):
+    """
+    Détail de la quantité, montant total et marge pour un produit donné 
+    dans le cadre d'un RapportVenteNocturne.
+    """
+    rapport = models.ForeignKey(
+        RapportVenteNocturne,
+        on_delete=models.CASCADE,
+        related_name="details_produits",
+        verbose_name="Rapport de Vente"
+    )
+    produit = models.ForeignKey(
+        Produit,
+        on_delete=models.PROTECT,
+        verbose_name="Produit"
+    )
+    
+    quantite_totale = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Quantité Totale Vendue"
+    )
+    
+    montant_total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Montant Total des Ventes"
+    )
+    
+    # NOUVEAU : Marge totale pour ce produit (quantité * marge unitaire)
+    marge_totale_produit = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Marge Totale du Produit"
+    )
+    
+    prix_unitaire_au_moment_vente = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Prix unitaire de vente"
+    )
+    
+    # NOUVEAU : Marge unitaire au moment de la vente
+    marge_unitaire_au_moment_vente = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Marge unitaire de référence"
+    )
+
+    def __str__(self):
+        return f"{self.produit.nom} ({self.quantite_totale}x) - Marge: {self.marge_totale_produit} F - {self.rapport}"
+    
+    def save(self, *args, **kwargs):
+        # Calcul automatique de la marge totale si non fournie
+        if not self.marge_totale_produit and self.quantite_totale > 0:
+            if self.marge_unitaire_au_moment_vente:
+                self.marge_totale_produit = self.quantite_totale * self.marge_unitaire_au_moment_vente
+            elif self.produit.marge:
+                self.marge_totale_produit = self.quantite_totale * self.produit.marge
+        
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        unique_together = ('rapport', 'produit') 
+        ordering = ['-montant_total']
+        verbose_name = "Détail de Vente Produit"
+        verbose_name_plural = "Détails de Vente Produit"
+
+
+class PerformancePersonnelNocturne(models.Model):
+    """
+    Archive les statistiques de performance d'un employé sur une période de rapport donnée.
+    """
+    rapport = models.ForeignKey(
+        RapportVenteNocturne, 
+        related_name='performance_personnel',
+        on_delete=models.CASCADE,
+        verbose_name="Rapport de Vente Nocturne"
+    )
+    personnel = models.ForeignKey(
+        Personnel,
+        on_delete=models.PROTECT, 
+        verbose_name="Employé concerné"
+    )
+    montant_vendu_total = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0,
+        verbose_name="Chiffre d'Affaire Réalisé"
+    )
+    montant_impaye_personnel = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0,
+        verbose_name="Montant Impayé à son nom"
+    )
+    quantite_totale_produits_vendus = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Quantité Totale de Produits Vendus"
+    )
+    montant_total_avances_personnel = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0,
+        verbose_name="Montant Total des Avances"
+    )
+
+    # Détail des ventes par produit pour cet employé
+    details_produits_vendus_archive = models.JSONField(
+        null=True, 
+        blank=True,
+        verbose_name="Détail des produits vendus archivé"
+    ) 
+
+    class Meta:
+        verbose_name = "Performance du Personnel Nocturne"
+        verbose_name_plural = "Performances du Personnel Nocturne"
+        unique_together = ('rapport', 'personnel') 
+        
+    def __str__(self):
+        return f"Performance de {self.personnel.prenom} {self.personnel.nom} pour {self.rapport.start_time.date()}"
+    
+
+    ####################
+
+    
 class DetailVenteBoisson(models.Model):
     """
     Détail de la quantité et du montant total vendus pour une boisson donnée 
@@ -244,54 +471,54 @@ class DetailVenteBoisson(models.Model):
         ordering = ['-montant_total']
 
 
-class PerformancePersonnelNocturne(models.Model):
-    """
-    Archive les statistiques de performance d'un employé sur une période de rapport donnée.
-    """
-    rapport = models.ForeignKey(
-        RapportVenteNocturne, 
-        related_name='performance_personnel',
-        on_delete=models.CASCADE,
-        verbose_name="Rapport de Vente Nocturne"
-    )
-    personnel = models.ForeignKey(
-        Personnel,
-        on_delete=models.PROTECT, 
-        verbose_name="Employé concerné"
-    )
-    montant_vendu_total = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        default=0,
-        verbose_name="Montant Total Vendu (Théorique)"
-    )
-    montant_impaye_personnel = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        default=0,
-        verbose_name="Montant Impayé à son nom"
-    )
-    quantite_totale_boissons_vendues = models.PositiveIntegerField(
-        default=0,
-        verbose_name="Quantité Totale de Boissons Vendues"
-    )
-    montant_total_avances_personnel = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        default=0,
-        verbose_name="Montant Total des Avances"
-    )
+# class PerformancePersonnelNocturne(models.Model):
+#     """
+#     Archive les statistiques de performance d'un employé sur une période de rapport donnée.
+#     """
+#     rapport = models.ForeignKey(
+#         RapportVenteNocturne, 
+#         related_name='performance_personnel',
+#         on_delete=models.CASCADE,
+#         verbose_name="Rapport de Vente Nocturne"
+#     )
+#     personnel = models.ForeignKey(
+#         Personnel,
+#         on_delete=models.PROTECT, 
+#         verbose_name="Employé concerné"
+#     )
+#     montant_vendu_total = models.DecimalField(
+#         max_digits=10, 
+#         decimal_places=2, 
+#         default=0,
+#         verbose_name="Montant Total Vendu (Théorique)"
+#     )
+#     montant_impaye_personnel = models.DecimalField(
+#         max_digits=10, 
+#         decimal_places=2, 
+#         default=0,
+#         verbose_name="Montant Impayé à son nom"
+#     )
+#     quantite_totale_boissons_vendues = models.PositiveIntegerField(
+#         default=0,
+#         verbose_name="Quantité Totale de Boissons Vendues"
+#     )
+#     montant_total_avances_personnel = models.DecimalField(
+#         max_digits=10, 
+#         decimal_places=2, 
+#         default=0,
+#         verbose_name="Montant Total des Avances"
+#     )
 
-    # Détail des ventes par boisson pour cet employé
-    details_boissons_vendues_archive = models.JSONField(
-        null=True, 
-        blank=True,
-        verbose_name="Détail des boissons vendues archivé"
-    ) 
+#     # Détail des ventes par boisson pour cet employé
+#     details_boissons_vendues_archive = models.JSONField(
+#         null=True, 
+#         blank=True,
+#         verbose_name="Détail des boissons vendues archivé"
+#     ) 
 
-    class Meta:
-        verbose_name = "Performance du Personnel Nocturne"
-        unique_together = ('rapport', 'personnel') 
+#     class Meta:
+#         verbose_name = "Performance du Personnel Nocturne"
+#         unique_together = ('rapport', 'personnel') 
         
-    def __str__(self):
-        return f"Performance de {self.personnel.prenom} {self.personnel.nom} pour {self.rapport.start_time.date()}"
+#     def __str__(self):
+#         return f"Performance de {self.personnel.prenom} {self.personnel.nom} pour {self.rapport.start_time.date()}"

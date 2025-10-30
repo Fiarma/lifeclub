@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier Ligne Inventaire{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 max-w-2xl">
+    <h1 class="text-2xl font-bold mb-4">Modification de la Ligne d'Inventaire</h1>
+    <p class="text-gray-600 mb-6">
+        Inventaire: <a href="{% url 'produits:inventaire_detail' pk=inventaire.pk %}" class="text-blue-500 hover:underline">{{ inventaire.nom }}</a>
+    </p>
+
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Produit : {{ ligne.produit.nom }}</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="{{ form.stock_initial_display.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ form.stock_initial_display.label }}
+                </label>
+                {{ form.stock_initial_display }}
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.stock_compte.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ form.stock_compte.label }} (Saisie obligatoire)
+                </label>
+                {{ form.stock_compte }}
+                {% for error in form.stock_compte.errors %}
+                    <p class="text-red-500 text-xs italic">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="{{ form.quantite_perte.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.quantite_perte.label }}
+                    </label>
+                    {{ form.quantite_perte }}
+                    {% for error in form.quantite_perte.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <div>
+                    <label for="{{ form.quantite_retrouvee.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.quantite_retrouvee.label }}
+                    </label>
+                    {{ form.quantite_retrouvee }}
+                    {% for error in form.quantite_retrouvee.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="{{ form.justification.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ form.justification.label }}
+                </label>
+                {{ form.justification }}
+                {% for error in form.justification.errors %}
+                    <p class="text-red-500 text-xs italic">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            {# Afficher les erreurs non-champ (Validation de cohérence) #}
+            {% if form.non_field_errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                    <p class="font-bold">Erreur de cohérence:</p>
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="flex justify-between">
+                <a href="{% url 'produits:inventaire_detail' pk=inventaire.pk %}" class="btn btn-secondary">
+                    Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    Enregistrer la Ligne
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

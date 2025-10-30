@@ -96,7 +96,7 @@
         <table class="table table-bordered">
           <thead>
             <tr>
-              <th>Boisson</th>
+              <th>Produit</th>
               <th>Quantité</th>
               <th>Montant</th>
               <th>Actions</th>
@@ -106,18 +106,18 @@
             {% for item in commande.items.all %}
             <tr id="item-row-{{ item.id }}">
               <td class="stock-interaction" 
-                  data-boisson-nom="{{ item.boisson.nom }}"
-                  data-boisson-stock="{{ item.boisson.stock_actuel }}"
-                  data-boisson-id="{{ item.boisson.id }}"
+                  data-produit-nom="{{ item.produit.nom }}"
+                  data-produit-stock="{{ item.produit.stock_actuel }}"
+                  data-produit-id="{{ item.produit.id }}"
                   data-item-id="{{ item.id }}">
-                {{ item.boisson.nom }}
+                {{ item.produit.nom }}
               </td>
               <td>
                 <button class="btn btn-sm btn-secondary" onclick="updateQuantity({{ item.id }}, 'decrement')">-</button>
                 <span id="item-quantite-{{ item.id }}">{{ item.quantite }}</span>
                 <button class="btn btn-sm btn-secondary" onclick="updateQuantity({{ item.id }}, 'increment')">+</button>
               </td>
-              <td><span id="item-montant-{{ item.id }}">{{ item.montant_boisson|floatformat:"-0" }}</span> F</td>
+              <td><span id="item-montant-{{ item.id }}">{{ item.montant_produit|floatformat:"-0" }}</span> F</td>
               <td>
                 <button class="btn btn-sm btn-danger" onclick="supprimerItem({{ item.id }})">Supprimer</button>
               </td>
@@ -128,20 +128,20 @@
 
         <div class="row mb-2">
           <div class="col">
-            <select id="nouvelle-boisson-{{ commande.id }}" class="form-select">
-              <option value="">-- Choisir une boisson --</option>
-              {% for boisson in boissons %}
-              <option value="{{ boisson.id }}" data-stock="{{ boisson.stock_actuel }}" {% if boisson.stock_actuel <= 0 %}disabled{% endif %}>
-                {{ boisson.nom }} - {{ boisson.prix_unitaire }} F {% if boisson.stock_actuel <= 0 %}(ÉPUISÉ){% endif %}
+            <select id="nouveau-produit-{{ commande.id }}" class="form-select">
+              <option value="">-- Choisir un produit --</option>
+              {% for produit in boissons %}
+              <option value="{{ produit.id }}" data-stock="{{ produit.stock_actuel }}" {% if produit.stock_actuel <= 0 %}disabled{% endif %}>
+                {{ produit.nom }} - {{ produit.prix_vente }} F {% if produit.stock_actuel <= 0 %}(ÉPUISÉ){% endif %}
               </option>
               {% endfor %}
             </select>
           </div>
           <div class="col">
-            <input type="number" id="quantite-nouvelle-{{ commande.id }}" class="form-control" placeholder="Quantité" min="1">
+            <input type="number" id="quantite-nouveau-{{ commande.id }}" class="form-control" placeholder="Quantité" min="1">
           </div>
           <div class="col">
-            <button class="btn btn-primary" onclick="ajouterBoisson({{ commande.id }})">Ajouter</button>
+            <button class="btn btn-primary" onclick="ajouterProduit({{ commande.id }})">Ajouter</button>
           </div>
         </div>
 
@@ -202,7 +202,7 @@
         <table class="table table-bordered">
           <thead>
             <tr>
-              <th>Boisson</th>
+              <th>Produit</th>
               <th>Quantité</th>
               <th>Montant</th>
             </tr>
@@ -210,9 +210,9 @@
           <tbody>
             {% for item in commande.items.all %}
             <tr>
-              <td>{{ item.boisson.nom }}</td>
+              <td>{{ item.produit.nom }}</td>
               <td>{{ item.quantite }}</td>
-              <td>{{ item.montant_boisson|floatformat:"-0" }} F</td>
+              <td>{{ item.montant_produit|floatformat:"-0" }} F</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -303,7 +303,7 @@
         <table class="table table-bordered">
           <thead>
             <tr>
-              <th>Boisson</th>
+              <th>Produit</th>
               <th>Quantité</th>
               <th>Montant</th>
             </tr>
@@ -311,9 +311,9 @@
           <tbody>
             {% for item in commande.items.all %}
             <tr>
-              <td>{{ item.boisson.nom }}</td>
+              <td>{{ item.produit.nom }}</td>
               <td>{{ item.quantite }}</td>
-              <td>{{ item.montant_boisson|floatformat:"-0" }} F</td>
+              <td>{{ item.montant_produit|floatformat:"-0" }} F</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -373,17 +373,17 @@
     font-family: Arial, sans-serif;
     text-align: center;
 ">
-    <strong id="stock-boisson-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
+    <strong id="stock-produit-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
     <span style="font-size: 0.8em; display: block;">Stock Actuel:</span>
-    <span id="stock-boisson-quantite" style="font-size: 2em; font-weight: bold;"></span>
+    <span id="stock-produit-quantite" style="font-size: 2em; font-weight: bold;"></span>
 </div>
 
 <script>
   
-  // --- Stock Display (inchangé) ---
+  // --- Stock Display (corrigé) ---
   const stockDisplay = document.getElementById('stock-display');
-  const stockNom = document.getElementById('stock-boisson-nom');
-  const stockQuantite = document.getElementById('stock-boisson-quantite');
+  const stockNom = document.getElementById('stock-produit-nom');
+  const stockQuantite = document.getElementById('stock-produit-quantite');
 
   function displayStock(nom, stock) {
       stockNom.textContent = nom;
@@ -398,7 +398,7 @@
   document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.stock-interaction').forEach(element => {
           element.addEventListener('mouseenter', function() {
-              displayStock(this.getAttribute('data-boisson-nom'), this.getAttribute('data-boisson-stock'));
+              displayStock(this.getAttribute('data-produit-nom'), this.getAttribute('data-produit-stock'));
           });
       });
   });
@@ -427,13 +427,11 @@
         datePaiementHTML = `<p style="margin: 5px 0;"><strong>Date de Paiement:</strong> ${datePaiementText}</p>`;
     }
 
-
     // Récupérer le personnel
     const personnelText = commandeCard.querySelector('h5').textContent.split(' - ')[1].trim();
     
     // Récupérer le total
     const totalElement = commandeCard.querySelector('#commande-total-' + commandeId);
-    // UTILISATION DE &nbsp; POUR LE TOTAL
     const totalText = totalElement ? totalElement.textContent + '&nbsp;F' : 'N/A'; 
 
     // Récupérer les informations client
@@ -448,13 +446,12 @@
       clientNameText = phoneText !== 'N/A' ? `Client (${phoneText})` : 'Client Anonyme';
     }
 
-
     const items = [];
     const rows = commandeCard.querySelectorAll('table tbody tr');
     
     rows.forEach(row => {
       const cells = row.querySelectorAll('td');
-      const boisson = cells[0].textContent.trim();
+      const produit = cells[0].textContent.trim();
       
       let quantiteElement = cells[1].querySelector('span');
       if (!quantiteElement) quantiteElement = cells[1];
@@ -467,7 +464,7 @@
       // Assurez-vous que le montant et la quantité sont des nombres pour le calcul
       const prixUnitaire = (parseFloat(montant) / parseInt(quantite)).toFixed(0);
       
-      items.push({ boisson, quantite, prixUnitaire, montant });
+      items.push({ produit, quantite, prixUnitaire, montant });
     });
 
     const staticPath = "{% static 'commandes/images/Lifeclub.jpg' %}"; 
@@ -496,7 +493,7 @@
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
           <thead>
             <tr style="border-bottom: 1px solid #ddd;">
-              <th style="text-align: left; padding: 5px; background: #f8f9fa;">Boisson</th>
+              <th style="text-align: left; padding: 5px; background: #f8f9fa;">Produit</th>
               <th style="text-align: center; padding: 5px; background: #f8f9fa;">Qté</th>
               <th style="text-align: right; padding: 5px; background: #f8f9fa;">Prix U.</th>
               <th style="text-align: right; padding: 5px; background: #f8f9fa;">Montant</th>
@@ -505,7 +502,7 @@
           <tbody>
             ${items.map(item => `
               <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 5px;">${item.boisson}</td>
+                <td style="padding: 5px;">${item.produit}</td>
                 <td style="text-align: center; padding: 5px;">${item.quantite}</td>
                 <td style="text-align: right; padding: 5px;">${item.prixUnitaire}&nbsp;F</td> <td style="text-align: right; padding: 5px;">${item.montant}&nbsp;F</td> </tr>
             `).join('')}
@@ -570,6 +567,53 @@
     printWindow.document.close();
   }
 
+  // Fonction pour mettre à jour le stock dans les selects
+  function updateStockInSelect(produitId, newStock) {
+    document.querySelectorAll(`select[id^="nouveau-produit-"] option[value="${produitId}"]`).forEach(option => {
+      const stockText = newStock <= 0 ? "(ÉPUISÉ)" : "";
+      const optionTextParts = option.textContent.split(' - ');
+      if (optionTextParts.length >= 2) {
+        const prixPart = optionTextParts[1].split(' F')[0];
+        option.textContent = `${optionTextParts[0]} - ${prixPart} F ${stockText}`;
+      }
+      option.disabled = newStock <= 0;
+      option.setAttribute('data-stock', newStock);
+    });
+  }
+
+  // Fonction pour ajouter dynamiquement un item au tableau
+  function addNewItemToTable(commandeId, itemData) {
+    if (!itemData) return;
+    
+    const tbody = document.querySelector(`.commande-card[data-id="${commandeId}"] table tbody`);
+    const newRow = document.createElement('tr');
+    newRow.id = `item-row-${itemData.id}`;
+    newRow.innerHTML = `
+      <td class="stock-interaction" 
+          data-produit-nom="${itemData.produit_nom}"
+          data-produit-stock="${itemData.produit_stock}"
+          data-produit-id="${itemData.produit_id}"
+          data-item-id="${itemData.id}">
+        ${itemData.produit_nom}
+      </td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="updateQuantity(${itemData.id}, 'decrement')">-</button>
+        <span id="item-quantite-${itemData.id}">${itemData.quantite}</span>
+        <button class="btn btn-sm btn-secondary" onclick="updateQuantity(${itemData.id}, 'increment')">+</button>
+      </td>
+      <td><span id="item-montant-${itemData.id}">${itemData.montant}</span> F</td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="supprimerItem(${itemData.id})">Supprimer</button>
+      </td>
+    `;
+    tbody.appendChild(newRow);
+    
+    // Re-attacher l'événement mouseenter pour l'affichage du stock
+    newRow.querySelector('.stock-interaction').addEventListener('mouseenter', function() {
+      displayStock(this.getAttribute('data-produit-nom'), this.getAttribute('data-produit-stock'));
+    });
+  }
+
   function updateQuantity(itemId, action) {
     fetch(`/commandes/update-item/${itemId}/`, {
       method: "POST",
@@ -580,42 +624,62 @@
     .then(data => {
       if (data.success) {
         const commandeId = data.commande_id;
-        if (data.deleted) { document.getElementById(`item-row-${itemId}`).remove(); } 
-        else {
+        if (data.deleted) { 
+          document.getElementById(`item-row-${itemId}`).remove(); 
+        } else {
           document.getElementById(`item-quantite-${data.item_id}`).innerText = data.quantite;
-          // Note: Le back-end doit renvoyer un montant entier ou sans décimales inutiles
           document.getElementById(`item-montant-${data.item_id}`).innerText = data.item_montant; 
         }
-        // Note: Le back-end doit renvoyer un montant total entier ou sans décimales inutiles
         document.getElementById(`commande-total-${commandeId}`).innerText = data.commande_total; 
+        
         if (data.new_stock !== undefined) {
-            displayStock(data.boisson_nom, data.new_stock);
-            location.reload(); 
+          displayStock(data.produit_nom, data.new_stock);
+          updateStockInSelect(data.produit_id, data.new_stock);
         }
-      } else { alert(data.error || "Erreur lors de la mise à jour : Stock épuisé."); }
+      } else { 
+        alert(data.error || "Erreur lors de la mise à jour : Stock épuisé."); 
+      }
     });
   }
 
-  function ajouterBoisson(commandeId) {
-    const boissonSelect = document.getElementById(`nouvelle-boisson-${commandeId}`);
-    const boissonId = boissonSelect.value;
-    const quantite = document.getElementById(`quantite-nouvelle-${commandeId}`).value || 1;
-    if (!boissonId) { alert("Veuillez choisir une boisson."); return; }
+  function ajouterProduit(commandeId) {
+    const produitSelect = document.getElementById(`nouveau-produit-${commandeId}`);
+    const produitId = produitSelect.value;
+    const quantite = document.getElementById(`quantite-nouveau-${commandeId}`).value || 1;
     
-    fetch(`/commandes/ajouter-boisson/${commandeId}/`, {
+    if (!produitId) { 
+      alert("Veuillez choisir un produit."); 
+      return; 
+    }
+    
+    fetch(`/commandes/ajouter-produit/${commandeId}/`, {
       method: "POST",
-      headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
-      body: `boisson_id=${boissonId}&quantite=${quantite}`
+      headers: { 
+        "X-CSRFToken": "{{ csrf_token }}", 
+        "Content-Type": "application/x-www-form-urlencoded" 
+      },
+      body: `produit_id=${produitId}&quantite=${quantite}`  // CORRIGÉ : produit_id au lieu de boisson_id
     })
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        if (data.new_stock !== undefined) { displayStock(data.boisson_nom, data.new_stock); }
-        location.reload(); 
-      } else { alert(data.message || "Erreur lors de l'ajout."); }
+        if (data.new_stock !== undefined) { 
+          displayStock(data.produit_nom, data.new_stock);
+          updateStockInSelect(data.produit_id, data.new_stock);
+        }
+        
+        // Recharger la page pour voir les changements
+        location.reload();
+        
+      } else { 
+        alert(data.message || "Erreur lors de l'ajout."); 
+      }
+    })
+    .catch(error => {
+      console.error('Erreur:', error);
+      alert("Une erreur s'est produite lors de l'ajout du produit.");
     });
   }
-
 
   function supprimerItem(itemId) {
     if (!confirm("Voulez-vous vraiment supprimer cet article ? Cette quantité sera remise en stock.")) return;
@@ -630,10 +694,12 @@
         document.getElementById(`item-row-${itemId}`).remove();
         document.getElementById(`commande-total-${data.commande_id}`).innerText = data.commande_total;
         if (data.new_stock !== undefined) {
-            displayStock(data.boisson_nom, data.new_stock);
-            location.reload(); 
+          displayStock(data.produit_nom, data.new_stock);
+          updateStockInSelect(data.produit_id, data.new_stock);
         }
-      } else { alert(data.message || "Erreur lors de la suppression."); }
+      } else { 
+        alert(data.message || "Erreur lors de la suppression."); 
+      }
     });
   }
 

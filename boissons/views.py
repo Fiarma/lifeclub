@@ -12,14 +12,6 @@ from .models import Boisson, HistoriqueStock
 # Import des formulaires utilisés par les vues
 from .forms import BoissonForm, HistoriqueStockForm
 
-# Vue pour lister toutes les boissons (affichage principal)
-#@login_required
-# def liste_boissons(request):
-#     # Récupération de toutes les boissons triées par nom
-#     boissons = Boisson.objects.all().order_by("nom")
-#     # Rendu du template 'liste_boissons.html' avec le contexte
-#     return render(request, "boissons/liste_boissons.html", {"boissons": boissons})
-
 
 # Vue pour lister toutes les boissons (affichage principal)
 #@login_required
@@ -37,27 +29,6 @@ def liste_boissons(request):
         "boissons_boite": boissons_boite,
         "boissons_terrasse": boissons_terrasse
     })
-
-# Vue pour ajouter une nouvelle boisson (accessible aux utilisateurs connectés)
-#@login_required
-# def add_boisson(request):
-#     # Si la méthode HTTP est POST : traitement du formulaire
-#     if request.method == "POST":
-#         # Instanciation du formulaire avec les données envoyées
-#         form = BoissonForm(request.POST)
-#         # Validation du formulaire
-#         if form.is_valid():
-#             # Sauvegarde de la nouvelle boisson en base
-#             form.save()
-#             # Message de succès pour l'utilisateur
-#             messages.success(request, "Nouvelle boisson ajoutée avec succès.")
-#             # Redirection vers la liste des boissons
-#             return redirect("boissons:liste_boissons")
-#     else:
-#         # Si méthode GET : on crée un formulaire vide pour affichage
-#         form = BoissonForm()
-#     # Rendu du template d'ajout avec le formulaire
-#     return render(request, "boissons/add_boisson.html", {"form": form})
 
 
 # Vue pour ajouter une nouvelle boisson (accessible aux utilisateurs connectés)

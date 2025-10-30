@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmer Validation - {{ approvisionnement.nom }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <div class="bg-white rounded-lg shadow-lg max-w-md mx-auto">
+        <!-- En-tête -->
+        <div class="bg-warning text-white p-4 rounded-t-lg text-center">
+            <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
+            <h2 class="text-xl font-bold">Confirmation Requise</h2>
+        </div>
+
+        <!-- Contenu -->
+        <div class="p-6">
+            <div class="text-center mb-4">
+                <p class="text-lg font-semibold text-gray-800 mb-2">
+                    Valider l'approvisionnement <span class="text-primary">"{{ approvisionnement.nom }}"</span> ?
+                </p>
+            </div>
+
+            <!-- Message d'alerte -->
+            <div class="alert alert-warning border-l-4 border-yellow-500 bg-yellow-50 p-4 mb-6">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-yellow-600 mt-1 mr-3"></i>
+                    <div>
+                        <p class="font-semibold text-yellow-800 mb-1">Attention : Cette action va :</p>
+                        <ul class="text-yellow-700 text-sm list-disc list-inside space-y-1">
+                            <li>Mettre à jour les stocks des produits</li>
+                            <li>Actualiser les prix d'achat</li>
+                            <li>Verrouiller définitivement l'approvisionnement</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex gap-3">
+                    <a href="{% url 'produits:approvisionnement_detail' pk=approvisionnement.pk %}" 
+                       class="btn btn-outline-secondary flex-1">
+                        <i class="fas fa-times mr-2"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-warning flex-1">
+                        <i class="fas fa-check mr-2"></i>Confirmer la validation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-warning {
+    border-radius: 8px;
+}
+.btn {
+    padding: 10px 16px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.btn-warning {
+    background-color: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+.btn-warning:hover {
+    background-color: #d97706;
+    border-color: #d97706;
+}
+</style>
+{% endblock %}

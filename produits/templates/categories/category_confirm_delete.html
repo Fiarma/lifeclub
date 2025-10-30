@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer {{ category.nom }}{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-xl rounded-xl p-6 max-w-xl mx-auto text-center">
+    <h1 class="text-3xl font-extrabold text-red-700 mb-4">
+        Confirmation de Suppression
+    </h1>
+    
+    <p class="text-lg text-gray-700 mb-6">
+        Êtes-vous sûr de vouloir supprimer la catégorie : 
+        <span class="font-bold text-gray-900">"{{ category.nom }}"</span> ?
+    </p>
+    
+    <p class="text-sm text-red-500 mb-8">
+        Tous les produits associés à cette catégorie deviendront "Sans Catégorie".
+    </p>
+
+    <form method="POST" action="{% url 'produits:category_delete' category.pk %}" class="flex justify-center space-x-6">
+        {% csrf_token %}
+        <a href="{% url 'produits:category_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-medium transition shadow-md">
+            Annuler
+        </a>
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold transition shadow-lg">
+            Oui, Supprimer
+        </button>
+    </form>
+</div>
+{% endblock %}

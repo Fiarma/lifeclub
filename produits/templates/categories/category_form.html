@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{% if category %}Modifier la Catégorie{% else %}Créer une Catégorie{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="bg-white shadow-xl rounded-xl p-6 max-w-xl mx-auto">
+    <h1 class="text-3xl font-extrabold text-gray-900 mb-6 border-b pb-4">
+        {% if category %}Modifier la Catégorie: {{ category.nom }}{% else %}Créer une Nouvelle Catégorie{% endif %}
+    </h1>
+    
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="space-y-4">
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-8 flex justify-end space-x-4 border-t pt-4">
+            <a href="{% url 'produits:category_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium transition">Annuler</a>
+            <button type="submit" class="btn-primary text-white px-6 py-3 rounded-lg font-bold shadow-lg">
+                {% if category %}Enregistrer les modifications{% else %}Créer la Catégorie{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

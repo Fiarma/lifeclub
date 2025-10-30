@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if inventaire.pk %}Modifier l'Inventaire : {{ inventaire.nom }}{% else %}Nouvel Inventaire{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 16px;
+    }
+    .card {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    .card-header {
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .card-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #111827;
+        margin: 0;
+    }
+    .card-body {
+        padding: 24px;
+    }
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .form-error {
+        font-size: 12px;
+        color: #dc2626;
+        margin-top: 4px;
+    }
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #111827;
+        margin: 32px 0 16px 0;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+    .table-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 2fr 60px;
+        gap: 12px;
+        padding: 12px 16px;
+        background-color: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px 8px 0 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 2fr 60px;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        border-top: none;
+        align-items: start;
+        background-color: white;
+        transition: background-color 0.2s;
+    }
+    .form-row:last-of-type {
+        border-radius: 0 0 8px 8px;
+    }
+    .form-row:hover {
+        background-color: #f9fafb;
+    }
+    .form-row.deleting {
+        background-color: #fef2f2;
+        opacity: 0.7;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+    .delete-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+    .delete-checkbox {
+        margin-right: 4px;
+    }
+    .delete-label {
+        font-size: 12px;
+        color: #dc2626;
+        cursor: pointer;
+    }
+    .remove-btn {
+        background: none;
+        border: none;
+        color: #dc2626;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+    .remove-btn:hover {
+        background-color: #fee2e2;
+    }
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-primary {
+        background-color: #2563eb;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+    }
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+    .btn-success {
+        background-color: #059669;
+        color: white;
+    }
+    .btn-success:hover {
+        background-color: #047857;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6b7280;
+    }
+    .hidden {
+        display: none;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .alert-error {
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="form-container">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">
+                {% if inventaire.pk %}
+                    📊 Modifier l'Inventaire
+                {% else %}
+                    📋 Nouvelle Session d'Inventaire
+                {% endif %}
+            </h1>
+        </div>
+        
+        <div class="card-body">
+            <!-- Messages d'erreur -->
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'error' %}
+                        <div class="alert-error">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <!-- Formulaire Principal Inventaire -->
+                <div class="form-group">
+                    <label class="form-label">Nom de l'Inventaire *</label>
+                    <input type="text" 
+                           name="{{ form.nom.name }}" 
+                           value="{{ form.nom.value|default:'' }}" 
+                           class="form-input" 
+                           placeholder="Ex: Inventaire de fin de mois - Décembre 2024"
+                           required>
+                    {% if form.nom.errors %}
+                        <div class="form-error">
+                            {% for error in form.nom.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Formset pour les Lignes de Produits -->
+                <h2 class="section-title">📦 Ajustement des Produits</h2>
+                
+                {{ ligne_formset.management_form }}
+                
+                <div id="ligne-formset-container">
+                    <!-- En-têtes du tableau -->
+                    <div class="table-header">
+                        <div>Produit</div>
+                        <div class="text-center">Stock Compté</div>
+                        <div class="text-center">Qté Perdue</div>
+                        <div class="text-center">Qté Retrouvée</div>
+                        <div>Justification</div>
+                        <div class="text-center">Action</div>
+                    </div>
+                    
+                    {% for form_ligne in ligne_formset %}
+                    <div class="form-row {% if form_ligne.DELETE.value %}deleting{% endif %}" id="form-{{ forloop.counter0 }}">
+                        <!-- Champs cachés -->
+                        {{ form_ligne.id }}
+                        {{ form_ligne.inventaire }}
+                        
+                        <!-- Produit -->
+                        <div>
+                            <select name="{{ form_ligne.prefix }}-produit" class="form-control" id="id_{{ form_ligne.prefix }}-produit" {% if form_ligne.instance.pk %}disabled{% endif %}>
+                                <option value="">Sélectionner un produit</option>
+                                {% for produit in produits %}
+                                <option value="{{ produit.pk }}" 
+                                        {% if form_ligne.produit.value|stringformat:"s" == produit.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ produit.nom }} (Stock: {{ produit.stock_actuel }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form_ligne.produit.errors %}
+                                <div class="form-error">
+                                    {% for error in form_ligne.produit.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Stock Compté -->
+                        <div>
+                            <input type="number" 
+                                   name="{{ form_ligne.prefix }}-stock_compte" 
+                                   value="{{ form_ligne.stock_compte.value|default:0 }}" 
+                                   class="form-control text-center" 
+                                   min="0" 
+                                   step="1"
+                                   id="id_{{ form_ligne.prefix }}-stock_compte">
+                            {% if form_ligne.stock_compte.errors %}
+                                <div class="form-error">
+                                    {% for error in form_ligne.stock_compte.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Quantité Perdue -->
+                        <div>
+                            <input type="number" 
+                                   name="{{ form_ligne.prefix }}-quantite_perte" 
+                                   value="{{ form_ligne.quantite_perte.value|default:0 }}" 
+                                   class="form-control text-center" 
+                                   min="0" 
+                                   step="1"
+                                   id="id_{{ form_ligne.prefix }}-quantite_perte">
+                            {% if form_ligne.quantite_perte.errors %}
+                                <div class="form-error">
+                                    {% for error in form_ligne.quantite_perte.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Quantité Retrouvée -->
+                        <div>
+                            <input type="number" 
+                                   name="{{ form_ligne.prefix }}-quantite_retrouvee" 
+                                   value="{{ form_ligne.quantite_retrouvee.value|default:0 }}" 
+                                   class="form-control text-center" 
+                                   min="0" 
+                                   step="1"
+                                   id="id_{{ form_ligne.prefix }}-quantite_retrouvee">
+                            {% if form_ligne.quantite_retrouvee.errors %}
+                                <div class="form-error">
+                                    {% for error in form_ligne.quantite_retrouvee.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Justification -->
+                        <div>
+                            <input type="text" 
+                                   name="{{ form_ligne.prefix }}-justification" 
+                                   value="{{ form_ligne.justification.value|default:'' }}" 
+                                   class="form-control" 
+                                   placeholder="Raison de l'ajustement"
+                                   id="id_{{ form_ligne.prefix }}-justification">
+                            {% if form_ligne.justification.errors %}
+                                <div class="form-error">
+                                    {% for error in form_ligne.justification.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Suppression -->
+                        <div class="delete-container">
+                            {% if form_ligne.instance.pk %}
+                                <input type="checkbox" 
+                                       name="{{ form_ligne.prefix }}-DELETE" 
+                                       id="{{ form_ligne.prefix }}-DELETE" 
+                                       class="delete-checkbox" 
+                                       {% if form_ligne.DELETE.value %}checked{% endif %}>
+                                <label for="{{ form_ligne.prefix }}-DELETE" class="delete-label">Supp.</label>
+                            {% else %}
+                                <button type="button" class="remove-btn" title="Supprimer cette ligne">×</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <p>Aucun produit ajouté. Cliquez sur "Ajouter un Produit" pour commencer.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="add-form-btn" class="btn btn-secondary">
+                        ➕ Ajouter un Produit
+                    </button>
+                    <div>
+                        <a href="{% url 'produits:inventaire_list' %}" class="btn" style="background-color: #6b7280; color: white; margin-right: 12px;">
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            {% if inventaire.pk %}
+                                💾 Enregistrer les Modifications
+                            {% else %}
+                                ✅ Terminer et Mettre en Attente
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Template caché pour les nouveaux formulaires avec la MÊME structure -->
+<div id="empty-form-template" class="hidden">
+    <div class="form-row">
+        <!-- Champs cachés pour le nouveau formulaire -->
+        <input type="hidden" name="{{ ligne_formset.prefix }}-__prefix__-id" id="id_{{ ligne_formset.prefix }}-__prefix__-id">
+        <input type="hidden" name="{{ ligne_formset.prefix }}-__prefix__-inventaire" id="id_{{ ligne_formset.prefix }}-__prefix__-inventaire">
+        
+        <!-- Produit -->
+        <div>
+            <select name="{{ ligne_formset.prefix }}-__prefix__-produit" class="form-control" id="id_{{ ligne_formset.prefix }}-__prefix__-produit">
+                <option value="">Sélectionner un produit</option>
+                {% for produit in produits %}
+                <option value="{{ produit.pk }}">
+                    {{ produit.nom }} (Stock: {{ produit.stock_actuel }})
+                </option>
+                {% endfor %}
+            </select>
+            <div class="form-error" style="display: none;"></div>
+        </div>
+        
+        <!-- Stock Compté -->
+        <div>
+            <input type="number" 
+                   name="{{ ligne_formset.prefix }}-__prefix__-stock_compte" 
+                   value="0" 
+                   class="form-control text-center" 
+                   min="0" 
+                   step="1"
+                   id="id_{{ ligne_formset.prefix }}-__prefix__-stock_compte">
+            <div class="form-error" style="display: none;"></div>
+        </div>
+        
+        <!-- Quantité Perdue -->
+        <div>
+            <input type="number" 
+                   name="{{ ligne_formset.prefix }}-__prefix__-quantite_perte" 
+                   value="0" 
+                   class="form-control text-center" 
+                   min="0" 
+                   step="1"
+                   id="id_{{ ligne_formset.prefix }}-__prefix__-quantite_perte">
+            <div class="form-error" style="display: none;"></div>
+        </div>
+        
+        <!-- Quantité Retrouvée -->
+        <div>
+            <input type="number" 
+                   name="{{ ligne_formset.prefix }}-__prefix__-quantite_retrouvee" 
+                   value="0" 
+                   class="form-control text-center" 
+                   min="0" 
+                   step="1"
+                   id="id_{{ ligne_formset.prefix }}-__prefix__-quantite_retrouvee">
+            <div class="form-error" style="display: none;"></div>
+        </div>
+        
+        <!-- Justification -->
+        <div>
+            <input type="text" 
+                   name="{{ ligne_formset.prefix }}-__prefix__-justification" 
+                   value="" 
+                   class="form-control" 
+                   placeholder="Raison de l'ajustement"
+                   id="id_{{ ligne_formset.prefix }}-__prefix__-justification">
+            <div class="form-error" style="display: none;"></div>
+        </div>
+        
+        <!-- Suppression -->
+        <div class="delete-container">
+            <button type="button" class="remove-btn" title="Supprimer cette ligne">×</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('ligne-formset-container');
+    const addButton = document.getElementById('add-form-btn');
+    const totalForms = document.getElementById('id_{{ ligne_formset.prefix }}-TOTAL_FORMS');
+    const emptyFormTemplate = document.getElementById('empty-form-template');
+
+    // Fonction pour mettre à jour les index des éléments
+    function updateFormIndex(form, index) {
+        // Mettre à jour tous les éléments avec des attributs name, id, for
+        const elements = form.querySelectorAll('[name], [id], [for]');
+        elements.forEach(element => {
+            if (element.name) {
+                element.name = element.name.replace(/__prefix__/g, index);
+            }
+            if (element.id) {
+                element.id = element.id.replace(/__prefix__/g, index);
+            }
+            if (element.getAttribute('for')) {
+                element.setAttribute('for', element.getAttribute('for').replace(/__prefix__/g, index));
+            }
+        });
+        
+        // Réinitialiser les valeurs des nouveaux champs
+        form.querySelectorAll('input[type="number"]').forEach(input => {
+            if (input.name.includes('quantite') || input.name.includes('stock_compte')) {
+                input.value = '0';
+            }
+        });
+        form.querySelectorAll('input[type="text"]').forEach(input => {
+            if (input.name.includes('justification')) {
+                input.value = '';
+            }
+        });
+        
+        // Réinitialiser le select
+        const select = form.querySelector('select');
+        if (select) {
+            select.selectedIndex = 0;
+        }
+    }
+
+    // Fonction pour ajouter un nouveau formulaire
+    addButton.addEventListener('click', function() {
+        const formIndex = parseInt(totalForms.value);
+        
+        // Cloner le template
+        const newForm = emptyFormTemplate.querySelector('.form-row').cloneNode(true);
+        newForm.id = `form-${formIndex}`;
+        
+        // Mettre à jour les index
+        updateFormIndex(newForm, formIndex);
+        
+        // Supprimer l'état vide s'il existe
+        const emptyState = container.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        // Ajouter le nouveau formulaire à la fin
+        const tableHeader = container.querySelector('.table-header');
+        let lastFormRow = container.querySelector('.form-row:last-of-type');
+        
+        if (lastFormRow) {
+            lastFormRow.parentNode.insertBefore(newForm, lastFormRow.nextSibling);
+        } else {
+            // Insérer après l'en-tête du tableau
+            tableHeader.parentNode.insertBefore(newForm, tableHeader.nextSibling);
+        }
+        
+        // Mettre à jour le compteur total
+        totalForms.value = formIndex + 1;
+        
+        // Ajouter l'écouteur d'événement pour le bouton de suppression
+        const removeBtn = newForm.querySelector('.remove-btn');
+        removeBtn.addEventListener('click', function() {
+            newForm.remove();
+            totalForms.value = parseInt(totalForms.value) - 1;
+            
+            // Si plus de formulaires, afficher l'état vide
+            if (container.querySelectorAll('.form-row').length === 0) {
+                const newEmptyState = document.createElement('div');
+                newEmptyState.className = 'empty-state';
+                newEmptyState.innerHTML = '<p>Aucun produit ajouté. Cliquez sur "Ajouter un Produit" pour commencer.</p>';
+                tableHeader.parentNode.insertBefore(newEmptyState, tableHeader.nextSibling);
+            }
+        });
+    });
+
+    // Gestion de la suppression pour les formulaires existants (cases à cocher)
+    container.addEventListener('change', function(e) {
+        if (e.target.type === 'checkbox' && e.target.name.includes('-DELETE')) {
+            const formRow = e.target.closest('.form-row');
+            if (e.target.checked) {
+                formRow.classList.add('deleting');
+            } else {
+                formRow.classList.remove('deleting');
+            }
+        }
+    });
+
+    // Gestion de la suppression pour les nouveaux formulaires (boutons ×)
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-btn')) {
+            const formRow = e.target.closest('.form-row');
+            if (formRow) {
+                formRow.remove();
+                totalForms.value = parseInt(totalForms.value) - 1;
+                
+                // Si plus de formulaires, afficher l'état vide
+                if (container.querySelectorAll('.form-row').length === 0) {
+                    const tableHeader = container.querySelector('.table-header');
+                    const newEmptyState = document.createElement('div');
+                    newEmptyState.className = 'empty-state';
+                    newEmptyState.innerHTML = '<p>Aucun produit ajouté. Cliquez sur "Ajouter un Produit" pour commencer.</p>';
+                    tableHeader.parentNode.insertBefore(newEmptyState, tableHeader.nextSibling);
+                }
+            }
+        }
+    });
+
+    // Vérifier s'il y a des formulaires au chargement
+    const existingForms = container.querySelectorAll('.form-row');
+    if (existingForms.length === 0) {
+        // Ajouter un formulaire vide par défaut
+        addButton.click();
+    }
+});
+</script>
+{% endblock %}

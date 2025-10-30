@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Inventaire - {{ inventaire.nom }}{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<h1 class="text-3xl font-bold text-gray-800 py-4 px-6 border-b border-gray-300 bg-gray-50 w-full">
+    🧾 Inventaire : <span class="text-indigo-700">{{ inventaire.nom }}</span>
+</h1>
+
+<!-- TABLEAU PLEIN ÉCRAN -->
+<table class="w-full border border-gray-400 text-sm text-gray-800 border-collapse">
+    <thead class="bg-gray-100">
+        <tr class="border-b border-gray-400">
+            <th class="px-4 py-3 text-left font-semibold border-r border-gray-300">Produit</th>
+            <th class="px-4 py-3 text-right font-semibold border-r border-gray-300">Stock Théorique</th>
+            <th class="px-4 py-3 text-right font-semibold border-r border-gray-300">Stock Compté</th>
+            <th class="px-4 py-3 text-right font-semibold text-red-600 border-r border-gray-300">Qté Perdue</th>
+            <th class="px-4 py-3 text-right font-semibold text-green-600 border-r border-gray-300">Qté Retrouvée</th>
+            <th class="px-4 py-3 text-left font-semibold border-r border-gray-300">Justification</th>
+            <th class="px-4 py-3 text-right font-semibold border-r border-gray-300">Gain Net (FCFA)</th>
+            <th class="px-4 py-3 text-center font-semibold">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for ligne in lignes %}
+        <tr class="border-b border-gray-300 hover:bg-gray-50">
+            <td class="px-4 py-3 border-r border-gray-300 font-medium">{{ ligne.produit.nom }}</td>
+            <td class="px-4 py-3 text-right border-r border-gray-300 text-blue-700">{{ ligne.stock_initial|default:"0" }}</td>
+            <td class="px-4 py-3 text-right border-r border-gray-300 font-semibold">{{ ligne.stock_compte|default:"0" }}</td>
+            <td class="px-4 py-3 text-right border-r border-gray-300 text-red-600 font-semibold">{{ ligne.quantite_perte|default:"0" }}</td>
+            <td class="px-4 py-3 text-right border-r border-gray-300 text-green-600 font-semibold">{{ ligne.quantite_retrouvee|default:"0" }}</td>
+            <td class="px-4 py-3 border-r border-gray-300 text-gray-600">{{ ligne.justification|default:"—" }}</td>
+            <td class="px-4 py-3 text-right border-r border-gray-300 font-bold {% if ligne.gain_net_ligne >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+                {{ ligne.gain_net_ligne|floatformat:0|intcomma }}
+            </td>
+            <td class="px-4 py-3 text-center">
+                {% if can_edit %}
+                    <a href="{% url 'produits:inventaire_ligne_update' pk=ligne.pk %}" 
+                       class="text-indigo-600 hover:text-indigo-900 font-semibold">✏️ Modifier</a>
+                {% else %}
+                    <span class="text-gray-400">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" class="px-6 py-4 text-center text-gray-500 italic">
+                Aucune ligne d’inventaire dénombrable trouvée pour cette session.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- BOUTONS D’ACTION ALIGNÉS -->
+<div class="flex justify-between items-center w-full py-6 px-6 bg-gray-50 border-t border-gray-300">
+    <!-- Bouton Modifier -->
+    <div>
+        {% if inventaire.statut == 'en_attente' and can_edit %}
+            <a href="{% url 'produits:inventaire_update' pk=inventaire.pk %}" 
+               class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-6 py-3 rounded-lg shadow-md transition">
+                ⚙️ Modifier l’Inventaire
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Bouton Valider -->
+    <div>
+        {% if inventaire.statut == 'en_attente' and can_validate %}
+            <form method="POST" action="{% url 'produits:inventaire_validate' pk=inventaire.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit"
+                        class="bg-green-500 hover:bg-green-600 text-gray-900 font-semibold px-6 py-3 rounded-lg shadow-md transition"
+                        onclick="return confirm('Êtes-vous sûr de vouloir VALIDER cet inventaire ? Cette action impactera le stock.')">
+                    ✅ Valider et Appliquer les Ajustements
+                </button>
+            </form>
+        {% elif inventaire.statut == 'valide' %}
+            <span class="text-green-700 font-semibold border border-green-600 rounded-lg px-4 py-2 bg-green-50 shadow-sm">
+                ✅ Inventaire Validé et Finalisé
+            </span>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Le tableau prend toute la largeur de l’écran */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ccc;
+}
+
+/* Amélioration visuelle des boutons */
+button, a {
+    transition: all 0.2s ease-in-out;
+}
+
+button:hover, a:hover {
+    transform: scale(1.03);
+}
+</style>
+{% endblock %}

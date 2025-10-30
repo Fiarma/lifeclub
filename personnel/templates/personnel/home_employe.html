@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - Tableau de bord{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        
+        {% if request.user.is_superuser %}
+            <h1>👋 Bienvenue, BOSS (Superutilisateur) !</h1>
+            <p class="lead">Accès complet à tous les systèmes de gestion.</p>
+        {% elif profile %}
+            <h1>👋 Bonjour, {{ profile.prenom }} !</h1>
+            <p class="lead">Votre poste actuel : <strong>{{ profile.get_role_display }}</strong></p>
+        {% else %}
+            <h1>Bienvenue</h1>
+            <p>Erreur: Profil non trouvé. Veuillez contacter l'administration.</p>
+        {% endif %}
+
+        <hr>
+
+        <div class="row">
+            
+            {% if request.user.is_superuser or profile.role == 'boss' %}
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Gestion du Personnel</h5>
+                            <p class="card-text">Créer, modifier et supprimer des profils employés.</p>
+                            <a href="{% url 'personnel:liste_personnel' %}" class="btn btn-primary">Voir la liste</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if request.user.is_superuser or profile.role == 'caissier' %}
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Opérations de Vente</h5>
+                            <p class="card-text">EnCOmm</p>
+                            <a href="{% url 'commandes:liste_commandes' %}" class="btn btn-success">Commades</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if request.user.is_superuser or profile.role in 'manager' %}
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Rapports & Statistiques</h5>
+                            <p class="card-text">Analyser les performances et les stocks.</p>
+                            <a href="{% url 'statistiques:dashboard' %}" class="btn btn-info">Voir les Stats</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            </div>
+
+        <hr>
+
+        {% if profile %}
+        <h3>Vos Informations</h3>
+        <p><strong>Rôle:</strong> {{ profile.get_role_display }}</p>
+        <p><strong>Lieu de travail:</strong> {{ profile.get_lieu_travail_display|default:"Non spécifié" }}</p>
+        <p><strong>Jours de repos:</strong> 
+            {% for jour in profile.jours_repos %}
+                <span class="badge bg-secondary">{{ jour|capfirst }}</span>
+            {% empty %}
+                Aucun jour de repos enregistré.
+            {% endfor %}
+        </p>
+        {% endif %}
+
+    </div>
+{% endblock content %}

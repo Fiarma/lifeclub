@@ -19,6 +19,9 @@
     <div class="mb-3">
       {{ form_commande.personnel.label_tag }}
       {{ form_commande.personnel }}
+      {% if form_commande.personnel.errors %}
+        <div class="text-danger small">{{ form_commande.personnel.errors }}</div>
+      {% endif %}
     </div>
 
     <hr>
@@ -28,7 +31,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            {{ form_commande.numero_telephone.label_tag }}
+            <label for="{{ form_commande.numero_telephone.id_for_label }}">Numéro de téléphone du client :</label>
             <div class="input-group">
                 {{ form_commande.code_pays_tel }} 
                 {{ form_commande.numero_telephone }}
@@ -43,10 +46,16 @@
         <div class="col-md-6">
             {{ form_commande.client_prenom.label_tag }}
             {{ form_commande.client_prenom }}
+            {% if form_commande.client_prenom.errors %}
+                <div class="text-danger small">{{ form_commande.client_prenom.errors }}</div>
+            {% endif %}
         </div>
         <div class="col-md-6">
             {{ form_commande.client_nom.label_tag }}
             {{ form_commande.client_nom }}
+            {% if form_commande.client_nom.errors %}
+                <div class="text-danger small">{{ form_commande.client_nom.errors }}</div>
+            {% endif %}
         </div>
     </div>
     <hr>
@@ -54,14 +63,19 @@
     <h4>Articles de la commande</h4>
     <div id="items-container">
       <div class="item-row mb-2 d-flex align-items-center gap-2">
-        <select name="boisson" class="form-select w-50 boisson-select" required>
-          <option value="">Sélectionnez une boisson</option>
-          {% for b in boissons %}
-            <option value="{{ b.id }}" 
-                    data-stock="{{ b.stock_actuel }}"
-                    {% if b.stock_actuel <= 0 %}disabled{% endif %}>
-              {{ b.nom }} — {{ b.prix_unitaire }} F 
-              {% if b.stock_actuel <= 0 %}(ÉPUISÉ){% else %}(Stock: {{ b.stock_actuel }}){% endif %}
+        <select name="produit" class="form-select w-50 produit-select" required>
+          <option value="">Sélectionnez un produit</option>
+          {% for p in produits %}
+            <option value="{{ p.id }}" 
+                    data-stock="{{ p.stock_actuel|default_if_none:'∞' }}"
+                    data-nature="{{ p.nature }}"
+                    {% if p.nature == 'denombrable' and p.stock_actuel <= 0 %}disabled{% endif %}>
+              {{ p.nom }} — {{ p.prix_vente }} F 
+              {% if p.nature == 'denombrable' %}
+                {% if p.stock_actuel <= 0 %}(ÉPUISÉ){% else %}(Stock: {{ p.stock_actuel }}){% endif %}
+              {% else %}
+                (Non dénombrable)
+              {% endif %}
             </option>
           {% endfor %}
         </select>
@@ -73,8 +87,8 @@
     </div>
 
     <div class="mt-3">
-      <button type="button" class="btn btn-secondary" id="add-item">Ajouter une boisson</button>
-      <button type="submit" class="btn btn-primary">Enregistrer</button>
+      <button type="button" class="btn btn-secondary" id="add-item">Ajouter un produit</button>
+      <button type="submit" class="btn btn-primary">Enregistrer la commande</button>
     </div>
   </form>
 </div>
@@ -90,17 +104,16 @@
     border-radius: 10px;
     padding: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    display: none; /* Caché par défaut */
+    display: none;
     z-index: 1000;
     font-family: Arial, sans-serif;
     text-align: center;
     pointer-events: none;
 ">
-    <strong id="stock-boisson-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
+    <strong id="stock-produit-nom" style="font-size: 1.1em; display: block; margin-bottom: 5px;"></strong>
     <span style="font-size: 0.8em; display: block;">Stock Actuel:</span>
-    <span id="stock-boisson-quantite" style="font-size: 2em; font-weight: bold;"></span>
+    <span id="stock-produit-quantite" style="font-size: 2em; font-weight: bold;"></span>
 </div>
-
 
 <script>
   // ===============================================
@@ -108,39 +121,47 @@
   // ===============================================
 
   const stockDisplay = document.getElementById('stock-display');
-  const stockNom = document.getElementById('stock-boisson-nom');
-  const stockQuantite = document.getElementById('stock-boisson-quantite');
+  const stockNom = document.getElementById('stock-produit-nom');
+  const stockQuantite = document.getElementById('stock-produit-quantite');
 
   /**
    * Affiche le cercle de stock et met à jour les informations.
    */
-  function displayStock(nom, stock) {
+  function displayStock(nom, stock, nature) {
       stockNom.textContent = nom;
-      stockQuantite.textContent = stock;
-      stockDisplay.style.display = 'block';
       
-      const stockInt = parseInt(stock);
-
-      // Mettre à jour la couleur d'alerte
-      if (stockInt <= 5 && stockInt > 0) {
-          stockDisplay.style.backgroundColor = '#ffc107'; // Jaune (faible)
-      } else if (stockInt === 0) {
-          stockDisplay.style.backgroundColor = '#dc3545'; // Rouge (épuisé)
+      // Afficher "∞" pour les produits non dénombrables
+      if (nature === 'non_denombrable' || stock === '∞') {
+          stockQuantite.textContent = '∞';
+          stockDisplay.style.backgroundColor = '#28a745'; // Vert pour non dénombrable
       } else {
-          stockDisplay.style.backgroundColor = '#007bff'; // Bleu (normal)
+          stockQuantite.textContent = stock;
+          const stockInt = parseInt(stock);
+          
+          // Mettre à jour la couleur d'alerte pour les dénombrables
+          if (stockInt <= 5 && stockInt > 0) {
+              stockDisplay.style.backgroundColor = '#ffc107'; // Jaune (faible)
+          } else if (stockInt === 0) {
+              stockDisplay.style.backgroundColor = '#dc3545'; // Rouge (épuisé)
+          } else {
+              stockDisplay.style.backgroundColor = '#007bff'; // Bleu (normal)
+          }
       }
+      
+      stockDisplay.style.display = 'block';
   }
 
   /**
    * Écouteur déclenché lors de la sélection d'une option.
    */
-  function handleBoissonChange() {
+  function handleProduitChange() {
       const selectedOption = this.options[this.selectedIndex];
       const stock = selectedOption.getAttribute('data-stock');
+      const nature = selectedOption.getAttribute('data-nature');
       const nom = selectedOption.textContent.split('—')[0].trim();
 
-      if (stock !== null) {
-          displayStock(nom, stock);
+      if (stock !== null && this.value !== "") {
+          displayStock(nom, stock, nature);
       } else {
           stockDisplay.style.display = 'none';
       }
@@ -150,16 +171,22 @@
   // GESTION DYNAMIQUE DES LIGNES
   // ===============================================
   
-  // Template HTML simplifié (sans les (Stock: X) dans le sélecteur cloné)
+  // Template HTML pour les nouvelles lignes
   const itemRowTemplate = `
       <div class="item-row mb-2 d-flex align-items-center gap-2">
-        <select name="boisson" class="form-select w-50 boisson-select" required>
-          <option value="">Sélectionnez une boisson</option>
-          {% for b in boissons %}
-            <option value="{{ b.id }}" 
-                    data-stock="{{ b.stock_actuel }}"
-                    {% if b.stock_actuel <= 0 %}disabled{% endif %}>
-              {{ b.nom }} — {{ b.prix_unitaire }} F 
+        <select name="produit" class="form-select w-50 produit-select" required>
+          <option value="">Sélectionnez un produit</option>
+          {% for p in produits %}
+            <option value="{{ p.id }}" 
+                    data-stock="{{ p.stock_actuel|default_if_none:'∞' }}"
+                    data-nature="{{ p.nature }}"
+                    {% if p.nature == 'denombrable' and p.stock_actuel <= 0 %}disabled{% endif %}>
+              {{ p.nom }} — {{ p.prix_vente }} F 
+              {% if p.nature == 'denombrable' %}
+                {% if p.stock_actuel <= 0 %}(ÉPUISÉ){% else %}(Stock: {{ p.stock_actuel }}){% endif %}
+              {% else %}
+                (Non dénombrable)
+              {% endif %}
             </option>
           {% endfor %}
         </select>
@@ -168,35 +195,45 @@
       </div>
   `;
   
+  /**
+   * Attache les écouteurs d'événements à un élément de ligne
+   */
   function attachListeners(element) {
-      const select = element.querySelector('.boisson-select');
+      const select = element.querySelector('.produit-select');
       const btnRemove = element.querySelector('.remove-item');
-      const container = document.getElementById('items-container');
 
       // Attacher l'écouteur de changement pour le cercle de stock
       if (select) {
-          select.addEventListener('change', handleBoissonChange);
+          select.addEventListener('change', handleProduitChange);
       }
 
       // Attacher l'écouteur de suppression
       if (btnRemove) {
           btnRemove.addEventListener('click', function () {
+              const container = document.getElementById('items-container');
+              const rows = container.querySelectorAll('.item-row');
+              
               // Ne supprimer la ligne que s'il y a plus d'une
-              if (container.querySelectorAll('.item-row').length > 1) {
+              if (rows.length > 1) {
                   element.remove();
                   stockDisplay.style.display = 'none'; // Cacher le cercle après suppression
+              } else {
+                  alert("Vous devez avoir au moins un produit dans la commande.");
               }
           });
       }
   }
   
+  /**
+   * Clone une nouvelle ligne de produit
+   */
   function cloneItemRow() {
     const container = document.getElementById('items-container');
     
     // Créer un élément à partir du template HTML
     const newRow = document.createElement('div');
     newRow.innerHTML = itemRowTemplate.trim();
-    const clone = newRow.firstChild; // Récupère le div.item-row
+    const clone = newRow.firstChild;
     
     // Remettre à zéro les champs
     const select = clone.querySelector('select');
@@ -211,34 +248,87 @@
     container.appendChild(clone);
   }
 
+  /**
+   * Valide le formulaire avant soumission
+   */
+  function validateForm() {
+      const selects = document.querySelectorAll('select[name="produit"]');
+      let hasValidProduct = false;
+      
+      selects.forEach(select => { 
+          const optionSelected = select.options[select.selectedIndex];
+          const nature = optionSelected.getAttribute('data-nature');
+          
+          // Vérifie si un produit est sélectionné
+          if (select.value) {
+              // Pour les produits dénombrables, vérifier qu'ils ne sont pas désactivés (épuisés)
+              if (nature === 'denombrable' && optionSelected.disabled) {
+                  alert('Certains produits dénombrables sélectionnés sont épuisés.');
+                  return false;
+              }
+              hasValidProduct = true; 
+          }
+      });
+      
+      if (!hasValidProduct) {
+          alert('Veuillez sélectionner au moins un produit.');
+          return false;
+      }
+      
+      // Vérifier que toutes les quantités sont valides
+      const quantites = document.querySelectorAll('input[name="quantite"]');
+      for (let input of quantites) {
+          if (input.value < 1) {
+              alert('Les quantités doivent être au moins de 1.');
+              input.focus();
+              return false;
+          }
+      }
+      
+      return true;
+  }
+
+  // ===============================================
+  // INITIALISATION AU CHARGEMENT DE LA PAGE
+  // ===============================================
   document.addEventListener('DOMContentLoaded', function() {
     // 1. Initialiser les écouteurs sur les lignes existantes au chargement
     document.querySelectorAll('.item-row').forEach(row => {
         attachListeners(row);
     });
     
-    // 2. Attacher l'événement au bouton "Ajouter une boisson"
+    // 2. Attacher l'événement au bouton "Ajouter un produit"
     document.getElementById('add-item').addEventListener('click', cloneItemRow);
     
-    // 3. (Optionnel) Contrôle front avant soumission 
+    // 3. Validation avant soumission du formulaire
     document.getElementById('form-ajout-commande').addEventListener('submit', function (e) {
-      const selects = document.querySelectorAll('select[name="boisson"]');
-      let ok = false;
-      selects.forEach(s => { 
-          // Vérifie si une boisson est sélectionnée et si elle n'est pas "disabled" (épuisée)
-          const optionSelected = s.options[s.selectedIndex];
-          if (s.value && !optionSelected.disabled) {
-              ok = true; 
-          }
-      });
-      
-      if (!ok) {
+      if (!validateForm()) {
         e.preventDefault();
-        alert('Veuillez sélectionner au moins une boisson disponible.');
       }
-      
-      // La validation du stock est gérée de manière fiable côté serveur (views.py)
     });
+
+    // 4. Afficher le stock pour le premier produit si déjà sélectionné
+    const firstSelect = document.querySelector('.produit-select');
+    if (firstSelect && firstSelect.value) {
+        handleProduitChange.call(firstSelect);
+    }
   });
 </script>
+
+<style>
+  .item-row {
+      padding: 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+  }
+  
+  .remove-item {
+      transition: all 0.3s ease;
+  }
+  
+  .remove-item:hover {
+      transform: scale(1.05);
+  }
+</style>
 {% endblock %}

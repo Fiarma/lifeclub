@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des Produits{% endblock %}
+
+{% block content %}
+<style>
+    .product-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 16px;
+    }
+    .product-header {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    @media (min-width: 640px) {
+        .product-header {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+    .product-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+    @media (min-width: 768px) {
+        .product-title {
+            font-size: 30px;
+        }
+    }
+    .product-count {
+        margin-top: 4px;
+        font-size: 14px;
+        color: #6b7280;
+    }
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        background-color: #2563eb;
+        color: white;
+        font-weight: 500;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background-color 0.2s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+    }
+    .btn-primary:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+    }
+    .table-container {
+        background-color: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    .product-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table-header {
+        background-color: #f9fafb;
+    }
+    .table-header th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .table-header th.text-right {
+        text-align: right;
+    }
+    .table-header th.text-center {
+        text-align: center;
+    }
+    .table-row {
+        background-color: white;
+        transition: background-color 0.15s;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .table-row:hover {
+        background-color: #f9fafb;
+    }
+    .table-row.inactive {
+        background-color: #fef2f2;
+        color: #6b7280;
+    }
+    .table-cell {
+        padding: 16px;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+    .product-info {
+        display: flex;
+        align-items: center;
+    }
+    .product-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #111827;
+    }
+    .product-name.inactive {
+        text-decoration: line-through;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .badge-gray {
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+    .badge-red {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+    .badge-green {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    .badge-blue {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    .badge-yellow {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    .badge-purple {
+        background-color: #e9d5ff;
+        color: #7e22ce;
+    }
+    .badge-orange {
+        background-color: #ffedd5;
+        color: #9a3412;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .btn-edit, .btn-delete {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    .btn-edit {
+        color: #1e40af;
+        background-color: #dbeafe;
+    }
+    .btn-edit:hover {
+        background-color: #bfdbfe;
+    }
+    .btn-delete {
+        color: #dc2626;
+        background-color: #fee2e2;
+    }
+    .btn-delete:hover {
+        background-color: #fecaca;
+    }
+    .empty-state {
+        padding: 48px 24px;
+        text-align: center;
+    }
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        color: #9ca3af;
+        margin: 0 auto 16px;
+    }
+    .empty-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+    .empty-description {
+        color: #6b7280;
+        margin-bottom: 16px;
+    }
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+    .status-active {
+        background-color: #10b981;
+    }
+    .status-inactive {
+        background-color: #ef4444;
+    }
+    .status-draft {
+        background-color: #f59e0b;
+    }
+    .status-archived {
+        background-color: #6b7280;
+    }
+</style>
+
+<div class="product-container">
+    <!-- En-tête avec titre et bouton d'ajout -->
+    <div class="product-header">
+        <div>
+            <h1 class="product-title">Catalogue des Produits</h1>
+            <p class="product-count">{{ products|length }} produit{{ products|length|pluralize }} au total</p>
+        </div>
+        <a href="{% url 'produits:product_create' %}" class="btn-primary">
+            <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Ajouter un Produit
+        </a>
+    </div>
+
+    <!-- Tableau des produits -->
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table class="product-table">
+                <thead class="table-header">
+                    <tr>
+                        <th>Produit</th>
+                        <th>Catégorie</th>
+                        <th>Nature</th>
+                        <th>Statut</th>
+                        <th class="text-right">Stock</th>
+                        <th class="text-right">Prix Achat</th>
+
+                        <th class="text-right">Prix Vente</th>
+                        <th class="text-right">Marge</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="table-row {% if not product.is_active %}inactive{% endif %}">
+                        <td class="table-cell">
+                            <div>
+                                <div class="product-name {% if not product.is_active %}inactive{% endif %}">
+                                    {{ product.nom }}
+                                </div>
+                                {% if not product.is_active %}
+                                <span class="badge badge-red" style="margin-top: 4px;">
+                                    <span class="status-dot status-inactive"></span>
+                                    Inactif
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="table-cell">
+                            <span class="badge badge-gray">
+                                {{ product.categorie.nom|default:"Sans catégorie" }}
+                            </span>
+                        </td>
+                        <td class="table-cell">
+                            <span class="badge badge-blue">
+                                {{ product.get_nature_display }}
+                            </span>
+                        </td>
+                        <td class="table-cell">
+                            {% if product.statut %}
+                                {% if product.statut == 'actif' %}
+                                    <span class="badge badge-green">
+                                        <span class="status-dot status-active"></span>
+                                        Actif
+                                    </span>
+                                {% elif product.statut == 'inactif' %}
+                                    <span class="badge badge-red">
+                                        <span class="status-dot status-inactive"></span>
+                                        Inactif
+                                    </span>
+                                {% elif product.statut == 'brouillon' %}
+                                    <span class="badge badge-yellow">
+                                        <span class="status-dot status-draft"></span>
+                                        Brouillon
+                                    </span>
+                                {% elif product.statut == 'archive' %}
+                                    <span class="badge badge-gray">
+                                        <span class="status-dot status-archived"></span>
+                                        Archivé
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-gray">
+                                        {{ product.statut|title }}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                {% if product.is_active %}
+                                    <span class="badge badge-green">
+                                        <span class="status-dot status-active"></span>
+                                        Actif
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-red">
+                                        <span class="status-dot status-inactive"></span>
+                                        Inactif
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="table-cell text-right">
+                            {% if product.nature == 'denombrable' %}
+                                <span class="badge {% if product.stock_actuel <= 10 %}badge-red{% else %}badge-green{% endif %}">
+                                    {{ product.stock_actuel|default:0|floatformat:"0" }} u.
+                                </span>
+                                {% if product.stock_actuel <= 10 and product.stock_actuel > 0 %}
+                                    <div style="font-size: 11px; color: #dc2626; margin-top: 2px;">
+                                        Stock faible
+                                    </div>
+                                {% elif product.stock_actuel == 0 %}
+                                    <div style="font-size: 11px; color: #dc2626; margin-top: 2px;">
+                                        Rupture
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-orange">
+                                    Non dénombrable
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="table-cell text-right" style="font-weight: 500; color: #111827;">
+                            {{ product.prix_achat|default:0|floatformat:"0" }} FCFA
+                        </td>
+
+                        <td class="table-cell text-right" style="font-weight: 500; color: #111827;">
+                            {{ product.prix_vente|default:0|floatformat:"0" }} FCFA
+                        </td>
+                        <td class="table-cell text-right" style="font-weight: 500; color: #111827;">
+                            {{ product.marge|default:0|floatformat:"0" }} FCFA
+                        </td>
+                        <td class="table-cell">
+                            <div class="action-buttons">
+                                <a href="{% url 'produits:product_update' product.pk %}" class="btn-edit">
+                                    <svg style="width: 16px; height: 16px; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Modifier
+                                </a>
+                                <a href="{% url 'produits:product_delete' product.pk %}" class="btn-delete">
+                                    <svg style="width: 16px; height: 16px; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Supprimer
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="table-cell">
+                            <div class="empty-state">
+                                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                </svg>
+                                <h3 class="empty-title">Aucun produit trouvé</h3>
+                                <div class="empty-description">Commencez par ajouter votre premier produit au catalogue.</div>
+                                <a href="{% url 'produits:product_create' %}" class="btn-primary" style="margin-top: 16px;">
+                                    <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Ajouter un produit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

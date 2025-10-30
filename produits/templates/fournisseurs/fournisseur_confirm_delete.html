@@ -1,0 +1,89 @@
+<!-- produits/templates/fournisseurs/fournisseur_confirm_delete_modal.html -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmation de suppression
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-4">
+                    <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                </div>
+                
+                <h4 class="fw-bold text-danger mb-3">Supprimer le fournisseur ?</h4>
+                
+                <div class="alert alert-light border mb-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 40px; height: 40px; font-size: 1rem; font-weight: bold;">
+                            <span id="modalFournisseurInitial"></span>
+                        </div>
+                        <div class="text-start">
+                            <h6 class="fw-bold mb-0" id="modalFournisseurNom"></h6>
+                            <small class="text-muted" id="modalFournisseurContact"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning" role="alert">
+                    <div class="d-flex">
+                        <i class="fas fa-info-circle me-2 mt-1"></i>
+                        <div>
+                            <strong>Attention :</strong> Cette action est irréversible. 
+                            <br>Toutes les données associées à ce fournisseur seront définitivement perdues.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0">
+                <button type="button" class="btn btn-lg btn-outline-secondary px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Annuler
+                </button>
+                <form method="POST" id="deleteForm" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-lg btn-danger px-4">
+                        <i class="fas fa-check me-2"></i>Confirmer la suppression
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    border-radius: 1rem 1rem 0 0;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    padding: 1.5rem 2rem 2rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+}
+
+.alert-light {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+</style>

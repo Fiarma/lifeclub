@@ -234,3 +234,329 @@ independant
 
  Pour l'annee, ca sera du premier start_time du premier jour de l'annee (01-o1-2024 20h30) jusqu'au dernier start_time du 31-12-2024 meme si son dernier end_time se trouve 
  le 01-01-2025
+
+ ######################## Logique pour la periode ###############
+ Il faut que la  periode que sa soit sur la periode en cours.
+ -  Aujourdui, les aggregation se font sur la date d'aujourd'hui suivant le start_time ie le premier start_time qui a commence Aujourdui (car on pourrait avoir plusieurs 
+ start_time dans le meme jour) jusqu'au dernier start_time (s'il ya en a ) qui est toujours en cours.
+ -  Journalier: un champ date s'affiche pour  permettre de choisir la date qu'on veut. les aggregation se font sur la date choisie suivant le start_time ie le premier start_time 
+ qui a commence a cette date  (car on pourrait avoir plusieurs start_time dans le meme jour) jusqu'au dernier start_time (s'il ya en a ) meme si son end_time se trouve dans le jour suivant.
+ -  Hebdomadaire: Pour la semaine en cours en commencant par le premier start_time du lundi jusqu'au dernier start_time toujours dans la semaine en cours
+ -  Mensuel: c'est pour le mois en cours  meme analogie
+ -  Annuel: pour l'annee en cours Meme analogie
+ -  Autre: 2 champs apparaissent date de debut et date de fint que l'utilisateur va definir et les aggregation se font sur cette periode. Ie en commencant par le premier
+ start_time de la date de debut jusqu'au dernier start_time de la date de fin meme si son end_time n'est pas la periode choisie.
+
+ Le  bouton Valider permettra de generer tous les graphiques en meme temps .
+ Ces differentes obtions doivent etre en haut alignees  avec un checkbox
+ Une fois qui'on clique sur le bouton valider  tous les graphiques sont automatiquement generer
+
+
+ ################ 11 -10- 2025 #############
+
+ Je veux ajouter pour les boissons:
+ Etant donne qu'il ya la cuisine, il est necessaire de preciser les produits de la cuissine. Pour cela, on aura donc un champ select qui aura 2 choix
+ a savoir boisson et cuisine.
+ Si le produit est de la cuisine il faut automatiquement egalement un champ select de 2 choix a savoir denombrables(car il ya certains produits de la cuisine comme 
+ poulets, merguez qu'on peut compter ) et non denombrables(commme le spaguetti, pomme de terre qui sont le plus souvent vendu par plat et on ne saurait estimer le nombre
+ nombre de plats qui seront achetes   ). Pour les produits non denombrables, on n'a pas besoin des champs stock_initial et stock_actuel mais c'est lors de la vente
+ que leur quantites vendues seront incrementees  
+
+ Le champ actuel prix_unitaire sera scinde en 2 : 
+ -  prix d'achat : qui est le prix d'achat du produit chez le fournisseur
+ -  prix de vente: le prix au quel il revend le produit
+ -  marge: qui est un champ auto calcule (est la difference entre le prix de vente et le prix d'achat) ce qui permet de savoir combien on gagne sur le produit
+
+###########
+
+Au lieu de faire seulement quantites_impactees, il faut  sciender en 2 ie perte (ou domages) et retrouver(qui sont les produits retrouves)
+pour chacun d'eux, on calcule la marge : etant donne qu'on connait le prix d'achat et de vente du produit actuel, on calcule  la marge des produits
+perdus ie la quantite les produits perdus multiplier par la marge de chaque produit (prix de vente - prix d'achat ) et egalement la marge des produits
+retrouves ie la quantite les produits retrouves  multiplier par la marge de chaque produit (prix de vente - prix d'achat ) et egalement la marge des produits
+ensuite on calcule le gain qui est la difference entre la marge des produits retrouves et des produits perdus
+Donc ces 3 champs marges pour les produits perdus, retrouves et gains sont des champs autocalcules si le secretaire valide 
+
+############ 
+
+Ce que je veux dire est que pour chaque inventaire conserne plusieurs produits donc ce qui est deja fait c'est pour chaque produit qui fera partie de 
+l'inventaire;
+pour chaque produit, il faut egalement ajouter les champs 
+- prix d'achat des produits perdus (prix d'achat du produit * quantite des produits perdus )
+- prix de vente  des produits perdus (prix de vente du produit * quantite des produits perdus)
+
+
+- prix d'achat des produits retrouves (prix d'achat du produit * quantite des produits retrouves )
+- prix de vente  des produits retrouves (prix de vente du produit * quantite des produits retrouves)
+
+pour avoir l'inventaire, on aura les champs :
+produits perdus (somme totale des quantites des produits perdus  du produit concerne par  l'inventaire en question)
+produits retrouves (qui est la sommme des quantites des produits retrouves pour chaque produit de l'inventaire )
+prix d'achat des prouits perdus (qui est la somme totale des prix d'achat des produits perdus de l'inventaire)
+prix de vente des prouits perdus (qui est la somme totale des prix de vente des produits perdus de l'inventaire)
+prix d'achat des prouits retrouves (qui est la somme totale des prix d'achat des produits retrouves de l'inventaire)
+prix d'achat des prouits retrouves (qui est la somme totale des prix d'achat des produits retrouves de l'inventaire)
+prix de vente des prouits retrouves (qui est la somme totale des prix de vente des produits retrouves de l'inventaire)
+marges des produits perdus (qui est la somme des marges des  produits  perdus)
+marges des produits retrouves (qui est la somme des marges des  produits  retrouves)
+gain qui est la difference entre les marges des produits retrouves et des produits perdus.
+Tous ces champs sont autocalcules.
+
+Concretement sur le templates quand on va cliquer sur ajouter un inventaire, on aura les differents champs;
+- Produits: un champs select avec la liste de tous les produits denombrables qu'on va selectionner
+-   Stock actuel: qui est le stcok que le personnel va saisir
+-   Justification
+-   Perte: la quantite de produits perdus ou en dommages
+-   Prix d'achat perte: (prix d'achat * quantite de perte) champ autocalule qui s'affiche avec les chiffres, pas besoin de saisir
+-   Prix de vente des produits perdus (prix de vente * quantite de perte) champ autocalule qui s'affiche avec les chiffres, pas besoin de saisir
+-   Marge des produits perdus: qui est la difference entre le prix de vente des produits perdus et les prix d'achats des produits  perdus
+
+-   Retrouves: la quantite de produits retrouves
+-   Prix d'achat retrouves: (prix d'achat * quantite de produits retrouves) champ autocalule qui s'affiche avec les chiffres, pas besoin de saisir
+-   Prix de vente des produits retrouves (prix de vente * quantite de produits retrouves) champ autocalule qui s'affiche avec les chiffres, pas besoin de saisir
+-   Marge des produits retrouves: qui est la difference entre le prix de vente des produits retrouves et les prix d'achats des produits  retrouves
+
+-   Gain net: difference entre les marges des produits retrouves et des produits perduits
+
+Le bouton Ajouter permettra d'ajouter un produit dans l'inventaire et les differents precendents vont s'afficher et le personnel remplit encore 
+Il peut ajouter autant de produits dans l'inventaire jusqu'au moment ou il va cliquer sur le bouton Terminer ou on va lui demander s'il souhaite
+fermer son inventaire. s'il clique sur non, il reste toujours dans le templates ou il peut toujours ajouter des produits dans l'inventaire.
+Et s'il clique sur Oui alors il  confirme avoir terminer l'inventaire et dans se cas on retoune dans la liste des inventaires ou on aura tous les champs 
+autocalcules de l'inventaire qui son la et si on clique sur l'id de l'inventaire on voit les details de l'inventaire ie la liste de tous les produits de
+l'inventaire.
+Tant que le secretaire n'a pas encore valider ou modifier l'inventaire, le meme personnel peut toujours le modifier
+
+
+
+
+############## 25 -10- 2025 ############
+
+
+Dans le templates de la liste des inventaires, on doit voir:
+
+-   Le nom de l'inventaire
+-   Le personnel (l'iniateur de l'inventaire)
+-   La quantite des produits perdus
+-   Le prix d'achats des produis perdus
+-   Le prix de vente des produits perdus, 
+-   La marge des produis perdus 
+
+-   La quantite des produits retrouves
+-   Le prix d'achats des produis retrouves
+-   Le prix de vente des produits retrouves, 
+-   La marge des produis retrouves 
+
+-   Le gain net global
+-   La date 
+-   L'action
+
+
+##########
+
+En fait, je veux que pour les produits non denombrables aient aussi un champ quantite, dans ce cas lorsque l'on choisit le produit non denombrable,
+ce champ quantite apparaisse pour permettre de saisir la quantite au lieu du champ stock_actuel .
+
+############ Pour les details de chaque inventaire ###
+
+Pour les details de chaque inventaire
+On doit avoir pour chaque produit:
+-   nom du produit,
+-   Stock actuel 
+-   Stock compte
+-   Quantite perdue
+-   Marge quantite perdue
+-   Quantite retrouvee
+-   Marge quantite retrouvee
+-   Gain 
+-   Action: pour modifier le produit en question de l'inventaire
+
+
+############# Gestion des approvisionnement ###########
+
+Un approvisionnement doit avoir un:
+-   Nom
+-   Date
+-   Personnel
+-   Fournisseur
+-   Telephone (du fournisseur)
+
+Pour un approvisionnement peut concerner plusieurs produits:
+Pour chaque produit on va avoir :
+-   Nom
+-   lieu
+-   Quantite approvisionnee
+-   Dommage (quantite endommagee)
+
+####### 
+
+Pour la ligne, on va ajouter le cout total du produit (car general sur la facture d'approvisionnement on met le montant total de chaque produit)
+Ainsi, on pourra auto-calculer le prix_achat_unitaire du produit en divisant le montant total du produit par la quantite du produit recue
+On va calculer la perte sur chaque produit qui est le produit de la quantite perdue par le prix_achat_unitaire
+
+
+Pour l'approvisionnement, on peut ajouter un champ cout du transport car souvent les transports sont factures 
+Egalement pour l'approvisionnement on peut ajouter les champs :
+-   Quantite perdue: qui est la somme de toutes les quantites perdues des differents produits 
+-   Montant perte: qui  est la somme des montants perdus de produits de l'approvisionnement 
+-   Montant des achats: qui est la somme de tous  les couts totaux des produits 
+-   Cout de l'approvisionnement: qui est la somme du cout du transport et du  montant des achats
+
+#############
+
+Egalement, je veux que tu ajoute un champ controleur, il s'agit de la personne qui va valider l'approvisionnement
+
+Super, il faut me donner maintenant pour le  :
+-   Views:
+
+    -   Liste fournisseurs
+    -   Creation du fournisseur
+    -   Modifier fournisseur
+    -   Supprimer fournisseur
+
+    -   Liste approvisionnement
+    -   Creer approvisionnement (une fois les personnes autorisees a creer un approvisionnement le cree, le statut reste en attente jusqu'a validation par
+    le controleur . Une fois le controleur valide, tout le stocks des produits sont mis a jour)
+    -   Modifier une ligne  approvisionnement (si une ligne est modifier, tout est automatiquement mis a jour dans l'approvisionnement)
+    -   Valider approvisionnement( la validation signifie que tout est ok et l'approvisionnement n'est plus modifiable une fois le superviseur valide 
+    l'approvisionnement. Du coup un message apparait pour l'informer que la modification ne sera plus possible une fois valider ). Et une fois cela fait, 
+    le stock des produits sont automatiquement mis a jour.
+    -   Supprimer approvisionnement
+
+-   Templates :
+    -   Creer les 4 differents templates pour le fournisseur 
+    -   Creer les differents templates pour l'approvisionnement
+
+-   Urls:
+    -   Ajouter les differents urls
+
+
+
+-  #################
+
+C'est bien mais je veux que avoir les colonnes suivantes:
+-   Reference ou Nom
+-   Fournisseur
+-   Telephone (enregistrer lors de l'enregistrement)
+-   Date de reception
+-   La personne ayant receptionne (le user)
+-   Cout de transport
+-   quantite_perdue_total
+-    montant_perte_total 
+-   quantite totale recue 
+-    montant_achats_total 
+-   Date de validation
+-   Le nom du contoleur qui a valider 
+-   Action (je veux seulement les  boutons Voir et Supprimer)
+
+il faut ajouter la colonne cout global de l'approvisionnement
+
+##########
+
+Pour les details de l'approvisionnement, je veux les colonnes:
+-   Nom du produit 
+-   lieu
+-   Quantite recue
+-   Quantite endommagee
+-   Quantite nette
+-   Montant total 
+-   Montant perte 
+-   Montant net 
+-   Prix unitaire 
+-   Action (avec le bouton pour modifer un produit donne )
+-   Bouton valider qui doit se trouver a la fin du tableau, il permettra de valider l'approvisionnement et mettre a jour les stocks 
+
+
+############## 28 -10- 2025 ############
+
+Je veux que sur chaque produit , tu ajoute la marge et  aussi tu va ajouter la marge totale de tous les produits dans le rapport de vente
+
+On aurra le CA = Montant Total de la Vente (Théorique):*
+            Marge totale = Marge totale sur tous les produits
+            Depense = Somme de toutes les depenses 
+            Benefice = Marge Totale - Depense
+
+-   Au niveau des statistiques, il faut representer un camabert pour representer le % de marge de chaque produit sur la marge totale 
+-   Pour les produits non denombrables, il faut egalement les quantites vendues
+
+
+Je veux egalement ajouter au niveau des details des produits, la marge de chaque produit correspondant a la quantite vendue. 
+Et au niveau du rapport ajouter le champ :
+-   marge totale :qui sera la somme  des marges des differents produits.
+-   J'ai fait une confusion entre les champs chiffre_affaire et montant_total_vente, en realite le montant_total_vente correspond au chiffre_affaire, donc on va
+-   montant_total_vente sera renomme chiffre_affaire et son calcul sera toujours comme montant_total_vente ie la somme de toutes les ventes 
+-   chiffre_affaire sera renomme benefice qui sera la difference entre la marge totale et les depenses 
+-   montant_decaisse est desormais la somme des depenses et des avances sur salaire
+
+--------------------
+
+Les noms des variables ont change dans le models de rapport donc il faut donc les readapter pour les statistiques
+Je veux que :
+-   repartition financiere :
+    -    Diagramme circulaire du  chiffre d'affaire  et on va representer les proportions des avances sur salaire, impayees, les 
+    depenses.
+    -   Un autre camabert de la marge totale  avec les proportions des depenses et du benefice net 
+
+-   Pour la performance  du produit, on aura 2 graphiques:
+    - Performance sur la quantite (en faisant un Diagramme en barre pour les quantites vendues)
+    -   Performance financiere ( la proportion de chaque produit sur la marge totale a l'aide d'un Diagramme circulaire de marge totale)
+
+-   Pour la performance du personnel: 
+    -   Performance sur la quantite des boissons vendues (en faissant un diagramme en  barre)
+    -   Performance financiere ( la proportion de sa quantite de boissons vendue sur la marge totale en faissant un diagramme circulaire)
+
+########### 29 -10- 2025 ###
+
+Le code n'est pas correct, il ya toujours des donnees pour construire ces 3 graphiques quei ne s'affichent pas, 
+Pourtant quand on prend le model DetailVenteProduit, chaque produit a une quantite totale vendue et c'est ca qu'on veut representer a travers le graphique 
+Performance des Produits (Quantité), 
+Egalement quand on prend la marge totale , chaque produit apporte un certain pourcentage et c'est ca qu'on veut representer a travers le graphique 
+Performance des Produits (Marge).
+
+Quant au graphique Performance du Personnel (Quantité), le model PerformancePersonnelNocturne, on a quantite_totale_produits_vendus et c'est ca on veut representer.
+
+############
+Quand on prend le graphique :
+-   Répartition du Chiffre d'Affaires: 
+    - Dans le chiffre d'affaire on a :
+        - Les impayees
+        - Les depenses 
+        - Les avances 
+        - le reste (l'argent concretement restant), mais cette variable n'est pas enregistre elle sera juste la diffierence :
+            reste = chiffre d'affaire - (impayees + depenses + avances )
+    Ce sont les 4 que tu vas representer dans le camabert, il ne doit pas avoir une proportion de chiffre d'affaire car il est la somme des 4, et c'est les 
+    proportions de ces 4 qui vont former le camabert 100% plein (chiffre_affaire). Bien evidement  le montant reel du chiffre_affaire se verra dans le hover
+
+-   Répartition de la Marge
+    Dans la marge totale, on a le benefice net = marge - depenses. Donc ce camabert representera uniquement les 2 variable que sont le benefice net et les depenses .
+    c'est la meme logique que le premier.
+    -   Benefice net: il represente quel % de la marge
+    -   Depenses: elle represente quel % de la marge.
+    Donc c'est le hover qu'on vera le montant de la marge totale de la vente 
+    Dans le hover, on aura:
+        -   Le nom de la variable
+        -   Son montant 
+        -   Son % 
+        -   Le montant de la marge totale
+
+-   Performance des Produits (Marge)
+    Ici, dans la marge totale , chaque produit a individuellement apporter sa marge et c'est ca que tu doit representer. 
+    Evidement, on va rappeler la marge totale dans le hover:
+    -   Produit 
+    -   Marge
+    -   son % 
+    -   La marge totale
+
+-   Performance du Personnel (Marge):
+    Chaque personne ayant vendu, a vendu une certaine quantite de  totale de produits. t ces produits ont contribuer a la marge totale donc c'est la proportion
+    de la marge de quantite totale des produits que la personne a vendue qu'on veut representer. 
+    Dans le hover, on aura:
+    -   La personne,
+    -   La quantite totale de produit qu'elle vendue
+    -   La marge apportee par cette quantite 
+    -   On rappelle la marge totale 
+
+#######
+
+Les 2  graphiques s'affichent 100% maintenant seulement que ca ne represente pas les proportions :
+-   Répartition du Chiffre d'Affaires : fait 100% mais ne represnte pas les proportions des impayees, des avances ni des depenses
+
+-   Répartition de la Marge: 100% de la marge totale mais ne represente pas le benefice net et les depenses
